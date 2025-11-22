@@ -1,0 +1,164 @@
+{
+  "menu": [
+    {
+      "id": 1,
+      "name": "Truffle Mushroom Pastaa",
+      "categoryId": "lunch",
+      "categoryLabel": "Lunch",
+      "time": 25,
+      "price": 450,
+      "status": "Available",
+      "tag": "Special",
+      "mainItems": [
+        "Pasta",
+        "Mushrooms",
+        "Truffle"
+      ],
+      "uses": "Vegetarian",
+      "extraItemIds": [
+        "fries",
+        "water"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80"
+      ],
+      "discount": null,
+      "finalPrice": 450
+    },
+    {
+      "id": 2,
+      "name": "Classic Eggs Benedict",
+      "categoryId": "breakfast",
+      "categoryLabel": "Breakfast",
+      "time": 15,
+      "price": 150,
+      "status": "Available",
+      "tag": "Fast",
+      "mainItems": [
+        "Poached Eggs",
+        "Canadian Bacon",
+        "Hollandaise"
+      ],
+      "uses": "Pork",
+      "extraItemIds": [
+        "cheese",
+        "water"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1522184216315-1e1c7a2ff8f3?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1483137140003-ae073b395549?auto=format&fit=crop&w=1200&q=80"
+      ],
+      "discount": null,
+      "finalPrice": 150
+    },
+    {
+      "id": 3,
+      "name": "Seared Tuna Steak",
+      "categoryId": "lunch",
+      "categoryLabel": "Lunch",
+      "time": 30,
+      "price": 250,
+      "status": "Not Available",
+      "tag": "Delicious",
+      "mainItems": [
+        "Ahi Tuna",
+        "Wasabi Mash",
+        "Soy Glaze"
+      ],
+      "uses": "Fish",
+      "extraItemIds": [
+        "soup",
+        "mayo"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1200&q=80"
+      ],
+      "discount": null,
+      "finalPrice": 250
+    },
+    {
+      "id": 4,
+      "name": "Chocolate Lava Cake",
+      "categoryId": "treats",
+      "categoryLabel": "Treats & Desserts",
+      "time": 10,
+      "price": 200,
+      "status": "Available",
+      "tag": "Fast",
+      "mainItems": [
+        "Warm Chocolate",
+        "Vanilla Ice Cream"
+      ],
+      "uses": "Vegetarian",
+      "extraItemIds": [
+        "water",
+        "fries"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1505253758473-96b7015fcd40?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?auto=format&fit=crop&w=1200&q=80"
+      ],
+      "discount": null,
+      "finalPrice": 200
+    },
+    {
+      "id": 5,
+      "name": "Avocado Toast Deluxe",
+      "categoryId": "breakfast",
+      "categoryLabel": "Breakfast",
+      "time": 10,
+      "price": 280,
+      "status": "Available",
+      "tag": "Delicious",
+      "mainItems": [
+        "Sourdough Bread",
+        "Avocado Smash",
+        "Feta"
+      ],
+      "uses": "Vegetarian",
+      "extraItemIds": [
+        "cheese",
+        "water"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1484980972926-edee96e0960d?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1455854249940-1d2828fa7b1e?auto=format&fit=crop&w=1200&q=80"
+      ],
+      "discount": null,
+      "finalPrice": 280
+    },
+    {
+      "id": 6,
+      "name": "Kids Chicken Fingers",
+      "categoryId": "treats",
+      "categoryLabel": "Treats & Desserts",
+      "time": 20,
+      "price": 300,
+      "status": "Available",
+      "tag": "Special",
+      "mainItems": [
+        "Crispy Chicken",
+        "Sweet Potato Fries"
+      ],
+      "uses": "Chicken",
+      "extraItemIds": [
+        "burger",
+        "water"
+      ],
+      "images": [
+        "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&w=1200&q=80"
+      ],
+      "discount": null,
+      "finalPrice": 300
+    }
+  ]
+}

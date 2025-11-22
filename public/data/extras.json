@@ -1,0 +1,46 @@
+{
+  "extras": [
+    {
+      "id": "water",
+      "name": "Bottled Water",
+      "price": "20",
+      "categoryId": "beverages",
+      "categoryLabel": "Beverages"
+    },
+    {
+      "id": "cheese",
+      "name": "Extra Cheese Slice",
+      "price": 1.5,
+      "categoryId": "add-ons",
+      "categoryLabel": "Add-ons"
+    },
+    {
+      "id": "mayo",
+      "name": "House Mayonnaise",
+      "price": 0.75,
+      "categoryId": "sauces",
+      "categoryLabel": "Sauces"
+    },
+    {
+      "id": "fries",
+      "name": "Side of Truffle Fries",
+      "price": 4,
+      "categoryId": "sides",
+      "categoryLabel": "Sides"
+    },
+    {
+      "id": "soup",
+      "name": "Soup of the Day",
+      "price": 6,
+      "categoryId": "sides",
+      "categoryLabel": "Sides"
+    },
+    {
+      "id": "burger",
+      "name": "Mini Cheeseburger",
+      "price": 7.5,
+      "categoryId": "kids",
+      "categoryLabel": "Kids"
+    }
+  ]
+}
