@@ -34,8 +34,7 @@ export async function POST(request) {
       // Extract text fields
       body = {
         name: formData.get('name') || 'Untitled Item',
-        categoryId: formData.get('categoryId') || 'other',
-        categoryLabel: formData.get('categoryLabel') || 'Other',
+        categoryIds: formData.get('categoryIds') ? JSON.parse(formData.get('categoryIds')) : [],
         time: parseInt(formData.get('time')) || 15,
         price: parseFloat(formData.get('price')) || 0,
         status: formData.get('status') || 'Available',
@@ -44,8 +43,6 @@ export async function POST(request) {
         mainItems: formData.get('mainItems') ? JSON.parse(formData.get('mainItems')) : [],
         extraItemIds: formData.get('extraItemIds') ? JSON.parse(formData.get('extraItemIds')) : [],
         discount: formData.get('discount') ? JSON.parse(formData.get('discount')) : null,
-        discountType: formData.get('discountType') || null,
-        discountValue: formData.get('discountValue') ? parseFloat(formData.get('discountValue')) : null,
       };
 
       // Handle image uploads
@@ -101,8 +98,7 @@ export async function POST(request) {
     const newItem = {
       id: newId,
       name: body.name || 'Untitled Item',
-      categoryId: body.categoryId || 'other',
-      categoryLabel: body.categoryLabel || 'Other',
+      categoryIds: body.categoryIds || [],
       time: body.time || 15,
       price: body.price || 0,
       finalPrice: finalPrice,
@@ -166,8 +162,7 @@ export async function PUT(request) {
       body = {
         id: id,
         name: formData.get('name'),
-        categoryId: formData.get('categoryId'),
-        categoryLabel: formData.get('categoryLabel'),
+        categoryIds: formData.get('categoryIds') ? JSON.parse(formData.get('categoryIds')) : undefined,
         time: formData.get('time') ? parseInt(formData.get('time')) : undefined,
         price: formData.get('price') ? parseFloat(formData.get('price')) : undefined,
         status: formData.get('status'),

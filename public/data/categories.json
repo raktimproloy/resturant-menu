@@ -1,0 +1,24 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "label": "Fast Food"
+    },
+    {
+      "id": 2,
+      "label": "Breakfast"
+    },
+    {
+      "id": 3,
+      "label": "Lunch"
+    },
+    {
+      "id": 4,
+      "label": "Dinner"
+    },
+    {
+      "id": 5,
+      "label": "Other"
+    }
+  ]
+}

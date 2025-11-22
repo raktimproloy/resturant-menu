@@ -15,6 +15,9 @@ export default function ExtrasManagement() {
     categoryId: '',
     categoryLabel: '',
   });
+  const [newImages, setNewImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
 
   useEffect(() => {
     fetchExtras();
@@ -36,17 +39,37 @@ export default function ExtrasManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const formDataToSend = new FormData();
+
+    // Add all form fields
+    Object.keys(formData).forEach(key => {
+      formDataToSend.append(key, formData[key]);
+    });
+
+    // Add images
+    if (editingItem) {
+      // For editing, send existing images and images to delete
+      formDataToSend.append('existingImages', JSON.stringify(existingImages));
+      if (imagesToDelete.length > 0) {
+        formDataToSend.append('deleteImages', JSON.stringify(imagesToDelete));
+      }
+    }
+    // Add new images (for both create and edit)
+    newImages.forEach((file) => {
+      formDataToSend.append('images', file);
+    });
 
     try {
       const url = '/api/extras';
       const method = editingItem ? 'PUT' : 'POST';
+      
+      if (editingItem) {
+        formDataToSend.append('id', editingItem.id);
+      }
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend,
       });
 
       const data = await response.json();
@@ -92,6 +115,9 @@ export default function ExtrasManagement() {
       categoryId: item.categoryId || '',
       categoryLabel: item.categoryLabel || '',
     });
+    setExistingImages(item.images || []);
+    setImagesToDelete([]);
+    setNewImages([]);
     setShowModal(true);
   };
 
@@ -103,6 +129,9 @@ export default function ExtrasManagement() {
       categoryId: '',
       categoryLabel: '',
     });
+    setNewImages([]);
+    setExistingImages([]);
+    setImagesToDelete([]);
     setEditingItem(null);
   };
 
@@ -136,6 +165,9 @@ export default function ExtrasManagement() {
             <thead className="bg-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Image
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
@@ -153,8 +185,17 @@ export default function ExtrasManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
-              {extras.map((item) => (
+              {extras.map((item) => {
+                const primaryImage = item.images?.[0] || `https://placehold.co/60x60/475569/f1f5f9?text=${item.name.split(' ')[0]}`;
+                return (
                 <tr key={item.id} className="hover:bg-gray-750">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <img
+                      src={primaryImage}
+                      alt={item.name}
+                      className="w-12 h-12 object-cover rounded-lg"
+                    />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-white font-medium">
                     {item.id}
                   </td>
@@ -184,7 +225,8 @@ export default function ExtrasManagement() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -263,6 +305,7 @@ export default function ExtrasManagement() {
                       value={formData.categoryId}
                       onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                       className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="e.g., other, beverages"
                     />
                   </div>
                   <div>
@@ -274,7 +317,63 @@ export default function ExtrasManagement() {
                       value={formData.categoryLabel}
                       onChange={(e) => setFormData({ ...formData, categoryLabel: e.target.value })}
                       className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="e.g., Other, Beverages"
                     />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Images
+                  </label>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files);
+                      setNewImages(prev => [...prev, ...files]);
+                    }}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {existingImages.map((img, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={img}
+                          alt={`Existing ${index + 1}`}
+                          className="w-16 h-16 object-cover rounded-lg border border-gray-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImagesToDelete(prev => [...prev, img]);
+                            setExistingImages(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-500"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {newImages.map((file, index) => (
+                      <div key={`new-${index}`} className="relative">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`New ${index + 1}`}
+                          className="w-16 h-16 object-cover rounded-lg border border-gray-600"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewImages(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-500"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
 

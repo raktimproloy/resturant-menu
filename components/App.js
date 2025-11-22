@@ -11,8 +11,9 @@ import OrderConfirmationModal from './OrderConfirmationModal';
 import CategorySelector from './CategorySelector';
 import SearchBar from './SearchBar';
 
-const MENU_DATA_PATH = '/data/menu.json';
-const EXTRAS_DATA_PATH = '/data/extras.json';
+const MENU_DATA_PATH = '/api/menu';
+const EXTRAS_DATA_PATH = '/api/extras';
+const CATEGORIES_DATA_PATH = '/api/categories';
 
 const priorityStyles = {
     Low: { text: 'text-yellow-400', bg: 'bg-yellow-400/20', icon: ChevronDown },
@@ -60,7 +61,8 @@ const useFetchWithRetry = () => {
 /**
  * Main Application Component
  */
-const App = () => {
+const App = ({ tableNumber: propTableNumber }) => {
+  const [tableNumber, setTableNumber] = useState(propTableNumber || null);
   const [menuItems, setMenuItems] = useState([]);
   const [extraItems, setExtraItems] = useState([]);
   const [isMenuLoading, setIsMenuLoading] = useState(true);
@@ -79,28 +81,209 @@ const App = () => {
   const [isQueueModalOpen, setIsQueueModalOpen] = useState(false); // 3. Queue modal state
   const [toastMessage, setToastMessage] = useState(null);
   const [isOrderSuccessModalOpen, setIsOrderSuccessModalOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   const fetchWithRetry = useFetchWithRetry();
+  const [orderStatus, setOrderStatus] = useState({}); // Track order status updates
+
+  // Update table number if prop changes
+  useEffect(() => {
+    if (propTableNumber) {
+      setTableNumber(propTableNumber);
+    }
+  }, [propTableNumber]);
+
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Fetch user's orders from API
+  const fetchUserOrders = useCallback(async () => {
+    if (!tableNumber) return;
+    
+    try {
+      const response = await fetch('/api/orders');
+      const data = await response.json();
+      if (data.success) {
+        // Filter orders for this table and exclude cancelled and completed (desk emptied)
+        const userOrders = data.orders
+          .filter(order => order.tableNumber === tableNumber && order.status !== 'cancelled' && order.status !== 'completed')
+          .map(order => ({
+            orderId: order.id,
+            items: order.items || [],
+            total: order.total || 0,
+            orderPriority: order.priority || 'Medium',
+            status: order.status === 'pending' ? 'Pending' : 
+                   order.status === 'accepted' || order.status === 'processing' ? 'In Progress' : 
+                   order.status === 'completed' ? 'Ready for Pickup' : 'Pending',
+            timeAdded: new Date(order.createdAt).getTime(),
+            timeRemaining: 0, // Will be calculated if needed
+            estimatedTotalTime: 0,
+            tableNumber: order.tableNumber,
+          }));
+        
+        setQueue(userOrders);
+      }
+    } catch (error) {
+      console.error('Error fetching user orders:', error);
+    }
+  }, [tableNumber]);
+
+  // Fetch orders on mount and when table number changes
+  useEffect(() => {
+    if (tableNumber) {
+      fetchUserOrders();
+      // Poll every 5 seconds as backup
+      const interval = setInterval(fetchUserOrders, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [tableNumber, fetchUserOrders]);
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    if (!tableNumber) return;
+    
+    const eventSource = new EventSource('/api/websocket');
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        
+        if (message.type === 'order_update') {
+          const order = message.data;
+          
+          // Only update if it's for this table
+          if (order.tableNumber === tableNumber) {
+            setOrderStatus(prev => ({
+              ...prev,
+              [order.id]: order.status,
+            }));
+            
+            // Update queue
+            setQueue(prevQueue => {
+              const existingIndex = prevQueue.findIndex(q => q.orderId === order.id);
+              
+              // Remove cancelled or completed orders (desk emptied)
+              if (order.status === 'cancelled' || order.status === 'completed') {
+                return prevQueue.filter(q => q.orderId !== order.id);
+              }
+              
+              const statusMap = {
+                pending: 'Pending',
+                accepted: 'In Progress',
+                processing: 'In Progress',
+                completed: 'Ready for Pickup',
+              };
+              
+              if (existingIndex >= 0) {
+                // Update existing order
+                return prevQueue.map((q, idx) => 
+                  idx === existingIndex
+                    ? { ...q, status: statusMap[order.status] || q.status }
+                    : q
+                );
+              } else {
+                // Add new order if it's for this table
+                return [...prevQueue, {
+                  orderId: order.id,
+                  items: order.items || [],
+                  total: order.total || 0,
+                  orderPriority: order.priority || 'Medium',
+                  status: statusMap[order.status] || 'Pending',
+                  timeAdded: new Date(order.createdAt).getTime(),
+                  timeRemaining: 0,
+                  estimatedTotalTime: 0,
+                  tableNumber: order.tableNumber,
+                }];
+              }
+            });
+            
+            // Show notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+              const statusMessages = {
+                accepted: 'Order Accepted!',
+                processing: 'Order Being Prepared',
+                completed: 'Order Ready for Pickup!',
+                cancelled: 'Order Cancelled',
+              };
+              
+              new Notification(statusMessages[order.status] || 'Order Updated', {
+                body: `Order #${order.id.slice(-4)} - ${order.status}`,
+                icon: '/favicon.ico',
+              });
+            }
+            
+            setToastMessage(`Order #${order.id.slice(-4)}: ${order.status}`);
+          }
+        } else if (message.type === 'new_order') {
+          // Refresh orders when new order is created
+          if (message.data.tableNumber === tableNumber) {
+            fetchUserOrders();
+          }
+        } else if (message.type === 'heartbeat') {
+          // Keep connection alive
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+    
+    eventSource.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      // Reconnect after 3 seconds
+      setTimeout(() => {
+        eventSource.close();
+      }, 3000);
+    };
+    
+    return () => {
+      eventSource.close();
+    };
+  }, [tableNumber, fetchUserOrders]);
 
   useEffect(() => {
     const loadMenuData = async () => {
       setIsMenuLoading(true);
       setDataError(null);
       try {
-        const [menuResponse, extrasResponse] = await Promise.all([
+        const [menuResponse, extrasResponse, categoriesResponse] = await Promise.all([
           fetch(MENU_DATA_PATH),
           fetch(EXTRAS_DATA_PATH),
+          fetch(CATEGORIES_DATA_PATH),
         ]);
 
-        if (!menuResponse.ok || !extrasResponse.ok) {
+        if (!menuResponse.ok || !extrasResponse.ok || !categoriesResponse.ok) {
           throw new Error('Failed to fetch menu data');
         }
 
         const menuJson = await menuResponse.json();
         const extrasJson = await extrasResponse.json();
+        const categoriesJson = await categoriesResponse.json();
 
         setMenuItems(menuJson.menu ?? []);
         setExtraItems(extrasJson.extras ?? []);
+        
+        // Ensure "Other" category exists for extras that don't match any category
+        const categoriesList = categoriesJson.categories ?? [];
+        const hasOtherCategory = categoriesList.some(cat => 
+          cat.label.toLowerCase() === 'other' || cat.id === 'other' || cat.label === 'Other'
+        );
+        
+        // If "Other" category doesn't exist, add it
+        if (!hasOtherCategory) {
+          const maxId = categoriesList.length > 0 
+            ? Math.max(...categoriesList.map(cat => cat.id || 0))
+            : 0;
+          categoriesList.push({
+            id: maxId + 1,
+            label: 'Other'
+          });
+        }
+        
+        setCategories(categoriesList);
       } catch (error) {
         console.error('Unable to load menu data', error);
         setDataError('Unable to load the menu right now. Please try again soon.');
@@ -113,18 +296,8 @@ const App = () => {
   }, []);
 
   const menuCategories = useMemo(() => {
-    const uniqueCategories = new Map();
-    menuItems.forEach(item => {
-      if (!item?.categoryId) return;
-      if (!uniqueCategories.has(item.categoryId)) {
-        uniqueCategories.set(item.categoryId, {
-          key: item.categoryId,
-          label: item.categoryLabel || item.categoryId,
-        });
-      }
-    });
-    return [{ key: 'all', label: 'All' }, ...uniqueCategories.values()];
-  }, [menuItems]);
+    return [{ key: 'all', label: 'All' }, ...categories.map(cat => ({ key: cat.label, label: cat.label }))];
+  }, [categories]);
 
   useEffect(() => {
     if (selectedCategory === 'all') return;
@@ -135,10 +308,39 @@ const App = () => {
   }, [menuCategories, selectedCategory]);
 
   const filteredMenu = useMemo(() => {
-    let items = menuItems;
-    if (selectedCategory !== 'all') {
-      items = items.filter(item => item.categoryId === selectedCategory);
+    let items = [];
+    
+    // If "Other" category is selected, only show extra items (no regular menu items)
+    if (selectedCategory === 'Other') {
+      // Transform extra items to match menu item structure
+      const extraItemsAsMenu = extraItems.map(extra => ({
+        id: `extra-${extra.id}`, // Prefix to avoid conflicts
+        name: extra.name,
+        price: Number(extra.price) || 0,
+        finalPrice: Number(extra.price) || 0,
+        status: 'Available',
+        images: extra.images || [],
+        time: 0, // Extras are typically instant
+        categoryIds: [],
+        tag: null,
+        mainItems: [],
+        uses: '',
+        extraItemIds: [],
+        discount: null,
+        isExtra: true, // Flag to identify this is an extra item
+      }));
+      items = extraItemsAsMenu;
+    } else if (selectedCategory === 'all') {
+      // Show all menu items when "all" is selected
+      items = [...menuItems];
+    } else {
+      // Filter menu items by selected category
+      const selectedCat = categories.find(cat => cat.label === selectedCategory);
+      if (selectedCat) {
+        items = menuItems.filter(item => item.categoryIds && item.categoryIds.includes(selectedCat.id));
+      }
     }
+    
     if (searchQuery) {
       const lowerCaseQuery = searchQuery.toLowerCase();
       items = items.filter(item =>
@@ -146,7 +348,7 @@ const App = () => {
       );
     }
     return items.sort((a, b) => b.status === 'Available' ? -1 : 1); // Sort available items first
-  }, [menuItems, selectedCategory, searchQuery]);
+  }, [menuItems, selectedCategory, searchQuery, categories, extraItems]);
 
   // Cart logic
   const cartTotal = useMemo(() => {
@@ -179,17 +381,36 @@ const App = () => {
 
   const handleDirectAddToCart = useCallback((item) => {
     const finalPrice = item.finalPrice !== undefined ? item.finalPrice : item.price;
-    const newCartItem = {
-      ...item,
-      quantity: 1,
-      extras: [],
-      totalPrice: finalPrice,
-      priority: 'Medium',
-      cartId: Date.now() + Math.random(),
-    };
 
-    setCart(prevCart => [...prevCart, newCartItem]);
-    setToastMessage(`Added 1x ${item.name} to order!`);
+    setCart(prevCart => {
+      const existingIndex = prevCart.findIndex(cartItem => cartItem.id === item.id && cartItem.extras.length === 0);
+
+      if (existingIndex !== -1) {
+        // Item already exists, increase quantity
+        const existing = prevCart[existingIndex];
+        const newQuantity = existing.quantity + 1;
+        const newTotal = finalPrice * newQuantity;
+        const updatedCart = prevCart.map((cartItem, index) =>
+          index === existingIndex
+            ? { ...cartItem, quantity: newQuantity, totalPrice: newTotal }
+            : cartItem
+        );
+        setToastMessage(`Added 1x ${item.name} to order! (Total: ${newQuantity}x)`);
+        return updatedCart;
+      } else {
+        // New item
+        const newCartItem = {
+          ...item,
+          quantity: 1,
+          extras: [],
+          totalPrice: finalPrice,
+          priority: 'Medium',
+          cartId: Date.now() + Math.random(),
+        };
+        setToastMessage(`Added 1x ${item.name} to order!`);
+        return [...prevCart, newCartItem];
+      }
+    });
   }, []);
 
   const handleRemoveCartItem = useCallback((cartId) => {
@@ -216,72 +437,114 @@ const App = () => {
     }));
   }, []);
 
-  // 4. Refactored handlePlaceOrder to add to Queue
-  const handlePlaceOrder = useCallback(() => {
-    setIsOrderModalOpen(false);
-    
-    // Calculate total preparation time based on items (simplified)
-    const totalPrepTime = cart.reduce((sum, item) => sum + (item.time * item.quantity), 0);
-    const orderId = crypto.randomUUID();
+  // 4. Refactored handlePlaceOrder to create order via API
+  const handlePlaceOrder = useCallback(async () => {
+    if (!tableNumber) {
+      alert('Table number is required. Please access the menu with ?table=X in the URL.');
+      return;
+    }
 
-    const priorityRank = { Low: 1, Medium: 2, High: 3 };
-    const highestPriority = cart.reduce((current, item) => {
-      const value = priorityRank[item.priority || 'Medium'] || 2;
-      return value > current ? value : current;
-    }, 2);
-    const highestPriorityLabel = Object.keys(priorityRank).find(key => priorityRank[key] === highestPriority) || 'Medium';
+    try {
+      setIsOrderModalOpen(false);
+      
+      // Calculate total preparation time based on items (simplified)
+      const totalPrepTime = cart.reduce((sum, item) => sum + ((item.time || 0) * item.quantity), 0);
 
-    // Create a new order object for the queue
-    const newOrder = {
-        orderId: orderId,
-        items: cart,
+      const priorityRank = { Low: 1, Medium: 2, High: 3 };
+      const highestPriority = cart.reduce((current, item) => {
+        const value = priorityRank[item.priority || 'Medium'] || 2;
+        return value > current ? value : current;
+      }, 2);
+      const highestPriorityLabel = Object.keys(priorityRank).find(key => priorityRank[key] === highestPriority) || 'Medium';
+
+      // Create order via API
+      const orderData = {
+        tableNumber: tableNumber,
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          finalPrice: item.finalPrice || item.price,
+          extras: item.extras || [],
+          priority: item.priority || 'Medium',
+        })),
         total: cartTotal,
-        orderPriority: highestPriorityLabel,
-        status: 'Pending', // Initial status
-        timeAdded: Date.now(),
-        timeRemaining: Math.ceil(totalPrepTime / 2), // Simulate time in seconds
-        estimatedTotalTime: Math.ceil(totalPrepTime / 2),
-    };
+        priority: highestPriorityLabel,
+        customerInfo: {},
+        notes: '',
+      };
 
-    setQueue(prevQueue => [...prevQueue, newOrder]);
-    setCart([]); // Clear cart after placing order
-    setToastMessage(`Order #${orderId.slice(-4)} placed! Added to queue.`);
-    setIsOrderSuccessModalOpen(true);
-  }, [cart, cartTotal]);
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
 
-  const handleFinishOrder = useCallback((orderId) => {
-    setQueue(prevQueue => prevQueue.filter(order => order.orderId !== orderId));
-    setToastMessage(`Order #${orderId.slice(-4)} picked up!`);
-  }, []);
-
-  // 5. Queue Time Status Simulation
-  useEffect(() => {
-    if (queue.length === 0) return;
-
-    // Timer runs every second to update queue statuses
-    const interval = setInterval(() => {
-        setQueue(prevQueue => {
-            return prevQueue.map(order => {
-                if (order.status === 'Pending') {
-                    // Start preparation after 5 seconds of pending time (simulated)
-                    if (Date.now() - order.timeAdded > 5000) {
-                        return { ...order, status: 'In Progress' };
-                    }
-                } else if (order.status === 'In Progress') {
-                    // Decrease remaining time
-                    const newTimeRemaining = Math.max(0, order.timeRemaining - 1);
-                    if (newTimeRemaining === 0) {
-                        return { ...order, status: 'Ready for Pickup', timeRemaining: 0 };
-                    }
-                    return { ...order, timeRemaining: newTimeRemaining };
-                }
-                return order;
-            });
+      const result = await response.json();
+      
+      if (result.success) {
+        // Broadcast new order to owner
+        await fetch('/api/broadcast', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'new_order',
+            data: result.order,
+          }),
         });
-    }, 1000);
 
-    return () => clearInterval(interval);
-  }, [queue]);
+        // Show notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Order Placed!', {
+            body: `Order #${result.order.id.slice(-4)} placed for Table ${tableNumber}`,
+            icon: '/favicon.ico',
+          });
+        }
+
+        // Refresh orders to get the new order from API
+        await fetchUserOrders();
+        
+        setCart([]); // Clear cart after placing order
+        setToastMessage(`Order #${result.order.id.slice(-4)} placed! Added to queue.`);
+        setIsOrderSuccessModalOpen(true);
+      } else {
+        alert(result.error || 'Failed to place order');
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      alert('An error occurred while placing your order');
+    }
+  }, [cart, cartTotal, tableNumber, fetchUserOrders]);
+
+  const handleFinishOrder = useCallback(async (orderId) => {
+    try {
+      // Mark order as done (completed) via API
+      const response = await fetch('/api/orders', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: orderId,
+          status: 'completed',
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // Remove from queue (will be updated via WebSocket)
+        setQueue(prevQueue => prevQueue.filter(order => order.orderId !== orderId));
+        setToastMessage(`Order #${orderId.slice(-4)} picked up!`);
+      }
+    } catch (error) {
+      console.error('Error finishing order:', error);
+    }
+  }, []);
 
 
   const fetchLlmSuggestion = useCallback(async () => {
@@ -479,6 +742,7 @@ const App = () => {
             onUpdateItemPriority={handleUpdateCartItemPriority}
             onClose={() => setIsOrderModalOpen(false)}
             onConfirm={handlePlaceOrder}
+            tableNumber={tableNumber}
         />
       )}
       

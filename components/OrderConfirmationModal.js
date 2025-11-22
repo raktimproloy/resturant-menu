@@ -1,5 +1,5 @@
 import { Trash2, X } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 
 const priorityChoices = ['Normal', 'Fast'];
 
@@ -14,6 +14,7 @@ const OrderConfirmationModal = ({
     onUpdateItemPriority,
     onClose,
     onConfirm,
+    tableNumber,
 }) => {
     const isCartEmpty = cart.length === 0;
 
@@ -50,9 +51,9 @@ const OrderConfirmationModal = ({
                                     <div className="flex items-start justify-between">
                                         <p className="text-white font-semibold">
                                             {item.quantity} x {item.name}{' '}
-                                            {/* <span className={`text-xs uppercase ml-1 ${priorityStyle.text}`}>
+                                            <span className={`text-xs ml-1 px-2 py-0.5 rounded-full ${label === 'Fast' ? 'bg-red-500/20 text-red-400' : 'bg-gray-700 text-gray-400'}`}>
                                                 ({label})
-                                            </span> */}
+                                            </span>
                                         </p>
                                         <span className="text-green-400 font-semibold">
                                             {itemTotal.toFixed(2)} BDT
@@ -121,6 +122,22 @@ const OrderConfirmationModal = ({
                     <span className="text-green-400">{total.toFixed(2)} BDT</span>
                 </div>
 
+                {/* Table Number Display */}
+                {tableNumber && (
+                    <div className="mt-4 mb-4 p-3 bg-indigo-900/30 border border-indigo-700 rounded-lg">
+                        <div className="text-sm text-gray-400">Table Number</div>
+                        <div className="text-xl font-bold text-indigo-300">Table {tableNumber}</div>
+                    </div>
+                )}
+
+                {!tableNumber && (
+                    <div className="mt-4 mb-4 p-3 bg-red-900/30 border border-red-700 rounded-lg">
+                        <div className="text-sm text-red-300">
+                            ⚠️ Table number not found. Please access the menu with ?table=X in the URL.
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex gap-3 mt-4">
                     <button
                         onClick={onClose}
@@ -129,10 +146,10 @@ const OrderConfirmationModal = ({
                         Cancel
                     </button>
                     <button
-                        onClick={() => !isCartEmpty && onConfirm()}
-                        disabled={isCartEmpty}
+                        onClick={() => !isCartEmpty && tableNumber && onConfirm()}
+                        disabled={isCartEmpty || !tableNumber}
                         className={`flex-1 py-2 rounded-xl font-semibold ${
-                            isCartEmpty
+                            isCartEmpty || !tableNumber
                                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                                 : 'bg-indigo-600 text-white hover:bg-indigo-500'
                         }`}

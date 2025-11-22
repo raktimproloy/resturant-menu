@@ -34,6 +34,7 @@ export default function AdminLayout({ children }) {
     { href: '/owner/dashboard/menu', label: 'Menu', icon: Utensils },
     { href: '/owner/dashboard/extras', label: 'Extras', icon: PlusCircle },
     { href: '/owner/dashboard/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/owner/dashboard/categories', label: 'Categories', icon: ShoppingBag },
   ];
 
   if (!adminData) {

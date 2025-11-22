@@ -55,12 +55,14 @@ const MenuCard = ({ item, onShowDetails, onAddToCartDirectly }) => {
         </h3>
 
         {/* Details */}
-        <div className="flex items-center justify-between text-xs sm:text-sm mb-3">
-          <div className="flex items-center text-indigo-300 font-medium">
-            <Clock className="w-4 h-4 mr-1" />
-            <span>{item.time} min</span>
+        {item.time !== undefined && item.time > 0 && (
+          <div className="flex items-center justify-between text-xs sm:text-sm mb-3">
+            <div className="flex items-center text-indigo-300 font-medium">
+              <Clock className="w-4 h-4 mr-1" />
+              <span>{item.time} min</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Price */}
         <div className="flex items-center justify-between mt-auto">

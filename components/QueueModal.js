@@ -44,40 +44,57 @@ const QueueModal = ({ queue, statusStyles, priorityStyles, onClose, onFinishOrde
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="flex flex-col">
                                                 <span className="text-xl font-bold text-white">Order #{order.orderId.slice(-4)}</span>
-                                                <span className={`text-sm font-semibold ${priority.text}`}>
-                                                    <priority.icon className="w-4 h-4 inline mr-1" />
-                                                    Priority: {order.orderPriority}
-                                                </span>
                                             </div>
-                                            <div className={`flex items-center font-extrabold text-sm px-3 py-1 rounded-full ${orderStatus.bg} ${orderStatus.text}`}>
-                                                <orderStatus.icon className="w-4 h-4 mr-1" />
-                                                {orderStatus.label}
-                                            </div>
+                                            {(() => {
+                                                const StatusIcon = orderStatus?.icon;
+                                                return (
+                                                    <div className={`flex items-center font-extrabold text-sm px-3 py-1 rounded-full ${orderStatus.bg} ${orderStatus.text}`}>
+                                                        {StatusIcon && <StatusIcon className="w-4 h-4 mr-1" />}
+                                                        {orderStatus.label}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+
+                                        <div className="mb-3">
+                                            {(() => {
+                                                const PriorityIcon = priority?.icon;
+                                                return (
+                                                    <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${priority.bg} ${priority.text}`}>
+                                                        {PriorityIcon && <PriorityIcon className="w-4 h-4" />}
+                                                        Priority: {order.orderPriority}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
 
                                         <p className="text-sm text-gray-300 mb-3">
-                                            {order.status === 'In Progress' 
-                                                ? `Est. Ready in ${order.timeRemaining} seconds...` 
-                                                : order.status === 'Pending' ? 'Waiting for preparation start.' : 'Ready now!'}
+                                            {order.status === 'Pending' ? 'Waiting for preparation start.' : order.status === 'In Progress' ? 'Order is being prepared...' : 'Ready now!'}
                                         </p>
 
                                         <ul className="text-sm text-gray-400 border-t border-gray-700 pt-3 space-y-1">
-                                            {order.items.map((item, itemIndex) => (
-                                                <li key={itemIndex} className="truncate">
-                                                    <span className="font-bold text-gray-200">{item.quantity}x</span> {item.name}
-                                                    {item.extras.length > 0 && ` (+${item.extras.length} extras)`}
-                                                </li>
-                                            ))}
+                                            {order.items.map((item, itemIndex) => {
+                                                const itemPriority = item.priority || 'Medium';
+                                                const priorityLabel = itemPriority === 'High' ? 'Fast' : 'Normal';
+                                                return (
+                                                    <li key={itemIndex} className="flex items-center justify-between">
+                                                        <span className="flex-1 truncate">
+                                                            <span className="font-bold text-gray-200">{item.quantity}x</span> {item.name}
+                                                            {item.extras && item.extras.length > 0 && ` (+${item.extras.length} extras)`}
+                                                        </span>
+                                                        <span className={`ml-2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${priorityLabel === 'Fast' ? 'bg-red-500/20 text-red-400' : 'bg-gray-700 text-gray-400'}`}>
+                                                            {priorityLabel}
+                                                        </span>
+                                                    </li>
+                                                );
+                                            })}
                                         </ul>
                                         
-                                        {order.status === 'Ready for Pickup' && (
-                                            <button
-                                                onClick={() => onFinishOrder(order.orderId)}
-                                                className="w-full mt-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-500 transition"
-                                            >
-                                                Mark as Picked Up (${order.total.toFixed(2)})
-                                            </button>
-                                        )}
+                                        <div className="mt-4 pt-3 border-t border-gray-700">
+                                            <div className="text-lg font-bold text-green-400 text-right">
+                                                Total: {Number(order.total).toFixed(2)} BDT
+                                            </div>
+                                        </div>
                                     </div>
                                 );
                             })}

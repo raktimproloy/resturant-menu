@@ -41,6 +41,16 @@
       "price": "75",
       "categoryId": "kids",
       "categoryLabel": "Kids"
+    },
+    {
+      "id": "juice",
+      "name": "Apple Juice",
+      "price": 60,
+      "categoryId": "lecuide",
+      "categoryLabel": "Lecuide",
+      "images": [
+        "/images/extra-juice-1763802716727-nb6hhk.jpg"
+      ]
     }
   ]
 }

@@ -152,9 +152,11 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
                 </span>
               )}
             </div>
-            <span className="flex items-center text-indigo-300">
-              <Clock className="w-5 h-5 mr-1" />{item.time} min
-            </span>
+            {!item.isExtra && (
+              <span className="flex items-center text-indigo-300">
+                <Clock className="w-5 h-5 mr-1" />{item.time} min
+              </span>
+            )}
           </div>
           
           {/* Priority Selection (6. Set priority) */}
@@ -178,21 +180,27 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
             </div>
           </div>
 
-          {/* Include Items & Uses */}
-          <div className="space-y-4 mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-indigo-300 mb-2">Main Ingredients</h3>
-              <ul className="flex flex-wrap gap-2">
-                {item.mainItems.map((ing, index) => (
-                  <li key={index} className="px-3 py-1 bg-gray-700 text-sm text-gray-50 rounded-full">{ing}</li>
-                ))}
-              </ul>
+          {/* Include Items & Uses - Only show for non-extra items */}
+          {!item.isExtra && (
+            <div className="space-y-4 mb-6">
+              {item.mainItems && item.mainItems.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-indigo-300 mb-2">Main Ingredients</h3>
+                  <ul className="flex flex-wrap gap-2">
+                    {item.mainItems.map((ing, index) => (
+                      <li key={index} className="px-3 py-1 bg-gray-700 text-sm text-gray-50 rounded-full">{ing}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {item.uses && (
+                <div>
+                  <h3 className="text-lg font-semibold text-indigo-300 mb-2">Contains</h3>
+                  <span className="px-3 py-1 bg-green-600 text-sm font-bold text-white rounded-full">{item.uses}</span>
+                </div>
+              )}
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-indigo-300 mb-2">Contains</h3>
-              <span className="px-3 py-1 bg-green-600 text-sm font-bold text-white rounded-full">{item.uses}</span>
-            </div>
-          </div>
+          )}
 
           {/* Related/Extra Items */}
           {relevantExtras.length > 0 && (
@@ -201,11 +209,23 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
               <div className="space-y-3">
                 {relevantExtras.map(extra => {
                   const isSelected = selectedExtras.find(e => e.id === extra.id);
+                  const extraImage = extra.images?.[0] || `https://placehold.co/60x60/475569/f1f5f9?text=${extra.name.split(' ')[0]}`;
                   return (
                     <div key={extra.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-xl">
-                      <div className='flex flex-col'>
-                          <span className="text-gray-50 font-medium">{extra.name}</span>
-                          <span className="text-sm text-green-300">+ {Number(extra.price).toFixed(2)} BDT</span>
+                      <div className='flex items-center gap-3'>
+                        <img
+                          src={extraImage}
+                          alt={extra.name}
+                          className="w-12 h-12 object-cover rounded-lg"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://placehold.co/60x60/475569/f1f5f9?text=${extra.name.split(' ')[0]}`;
+                          }}
+                        />
+                        <div className='flex flex-col'>
+                            <span className="text-gray-50 font-medium">{extra.name}</span>
+                            <span className="text-sm text-green-300">+ {Number(extra.price).toFixed(2)} BDT</span>
+                        </div>
                       </div>
                       {isSelected ? (
                          <div className="flex items-center space-x-2">
