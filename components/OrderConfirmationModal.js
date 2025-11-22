@@ -97,7 +97,7 @@ const OrderConfirmationModal = ({
                                         <ul className="text-xs text-gray-400 space-y-1">
                                             {item.extras.map(extra => (
                                                 <li key={extra.id || extra.name}>
-                                                    {extra.qty}x {extra.name} (+{(extra.price * extra.qty).toFixed(2)} BDT)
+                                                    {extra.qty}x {extra.name} (+{(Number(extra.price) * extra.qty).toFixed(2)} BDT)
                                                 </li>
                                             ))}
                                         </ul>

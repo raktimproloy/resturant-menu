@@ -44,6 +44,8 @@ export async function POST(request) {
         mainItems: formData.get('mainItems') ? JSON.parse(formData.get('mainItems')) : [],
         extraItemIds: formData.get('extraItemIds') ? JSON.parse(formData.get('extraItemIds')) : [],
         discount: formData.get('discount') ? JSON.parse(formData.get('discount')) : null,
+        discountType: formData.get('discountType') || null,
+        discountValue: formData.get('discountValue') ? parseFloat(formData.get('discountValue')) : null,
       };
 
       // Handle image uploads

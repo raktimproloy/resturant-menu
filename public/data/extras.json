@@ -10,35 +10,35 @@
     {
       "id": "cheese",
       "name": "Extra Cheese Slice",
-      "price": 1.5,
+      "price": "50",
       "categoryId": "add-ons",
       "categoryLabel": "Add-ons"
     },
     {
       "id": "mayo",
       "name": "House Mayonnaise",
-      "price": 0.75,
+      "price": "100",
       "categoryId": "sauces",
       "categoryLabel": "Sauces"
     },
     {
       "id": "fries",
       "name": "Side of Truffle Fries",
-      "price": 4,
+      "price": "130",
       "categoryId": "sides",
       "categoryLabel": "Sides"
     },
     {
       "id": "soup",
       "name": "Soup of the Day",
-      "price": 6,
+      "price": "80",
       "categoryId": "sides",
       "categoryLabel": "Sides"
     },
     {
       "id": "burger",
       "name": "Mini Cheeseburger",
-      "price": 7.5,
+      "price": "75",
       "categoryId": "kids",
       "categoryLabel": "Kids"
     }

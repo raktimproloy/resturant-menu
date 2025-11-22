@@ -162,7 +162,7 @@ export default function ExtrasManagement() {
                     {item.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-green-400 font-semibold">
-                    {item.price.toFixed(2)} BDT
+                    {Number(item.price).toFixed(2)} BDT
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-300">
                     {item.categoryLabel}

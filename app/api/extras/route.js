@@ -44,7 +44,7 @@ export async function POST(request) {
     const newItem = {
       id: body.id,
       name: body.name || 'Untitled Extra',
-      price: body.price || 0,
+      price: Number(body.price) || 0,
       categoryId: body.categoryId || 'other',
       categoryLabel: body.categoryLabel || 'Other',
     };

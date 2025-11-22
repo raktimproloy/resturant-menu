@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, X, Save } from 'lucide-react';
 
 export default function MenuManagement() {
   const [menuItems, setMenuItems] = useState([]);
+  const [extras, setExtras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -19,11 +20,13 @@ export default function MenuManagement() {
     mainItems: [],
     uses: '',
     extraItemIds: [],
-    discount: null,
+    discountType: 'percentage',
+    discountValue: '',
   });
 
   useEffect(() => {
     fetchMenuItems();
+    fetchExtras();
   }, []);
 
   const fetchMenuItems = async () => {
@@ -40,18 +43,41 @@ export default function MenuManagement() {
     }
   };
 
+  const fetchExtras = async () => {
+    try {
+      const response = await fetch('/api/extras');
+      const data = await response.json();
+      if (data.success) {
+        setExtras(data.extras || []);
+      }
+    } catch (error) {
+      console.error('Error fetching extras:', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formDataToSend = new FormData();
-    
+
     // Add all form fields
     Object.keys(formData).forEach(key => {
-      if (key === 'mainItems' || key === 'extraItemIds' || key === 'discount') {
+      if (key === 'mainItems' || key === 'extraItemIds') {
         formDataToSend.append(key, JSON.stringify(formData[key]));
+      } else if (key === 'discountType' || key === 'discountValue') {
+        // Handle discount separately
       } else {
         formDataToSend.append(key, formData[key]);
       }
     });
+
+    // Add discount as JSON object
+    if (formData.discountValue) {
+      const discount = {
+        type: formData.discountType,
+        value: parseFloat(formData.discountValue)
+      };
+      formDataToSend.append('discount', JSON.stringify(discount));
+    }
 
     try {
       const url = editingItem ? '/api/menu' : '/api/menu';
@@ -113,7 +139,8 @@ export default function MenuManagement() {
       mainItems: item.mainItems || [],
       uses: item.uses || '',
       extraItemIds: item.extraItemIds || [],
-      discount: item.discount || null,
+      discountType: item.discount?.type || 'percentage',
+      discountValue: item.discount?.value || '',
     });
     setShowModal(true);
   };
@@ -130,7 +157,8 @@ export default function MenuManagement() {
       mainItems: [],
       uses: '',
       extraItemIds: [],
-      discount: null,
+      discountType: 'percentage',
+      discountValue: '',
     });
     setEditingItem(null);
   };
@@ -191,10 +219,10 @@ export default function MenuManagement() {
                     {item.categoryLabel}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-green-400 font-semibold">
-                    {item.finalPrice !== undefined ? item.finalPrice.toFixed(2) : item.price.toFixed(2)} BDT
+                    {item.finalPrice !== undefined ? Number(item.finalPrice).toFixed(2) : Number(item.price).toFixed(2)} BDT
                     {item.discount && (
                       <span className="ml-2 text-xs text-red-400 line-through">
-                        {item.price.toFixed(2)}
+                        {Number(item.price).toFixed(2)}
                       </span>
                     )}
                   </td>
@@ -330,6 +358,65 @@ export default function MenuManagement() {
                       <option value="Available">Available</option>
                       <option value="Not Available">Not Available</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Discount Type
+                    </label>
+                    <select
+                      value={formData.discountType}
+                      onChange={(e) => setFormData({ ...formData, discountType: e.target.value })}
+                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="percentage">Percentage</option>
+                      <option value="price">Fixed Amount</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Discount Value
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.discountValue}
+                      onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
+                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder={formData.discountType === 'percentage' ? 'e.g., 10 for 10%' : 'e.g., 50 for 50 BDT'}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Available Extras
+                  </label>
+                  <div className="max-h-32 overflow-y-auto bg-gray-700 border border-gray-600 rounded-lg p-2">
+                    {extras.map((extra) => (
+                      <label key={extra.id} className="flex items-center space-x-2 py-1">
+                        <input
+                          type="checkbox"
+                          checked={formData.extraItemIds.includes(extra.id)}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setFormData(prev => ({
+                              ...prev,
+                              extraItemIds: checked
+                                ? [...prev.extraItemIds, extra.id]
+                                : prev.extraItemIds.filter(id => id !== extra.id)
+                            }));
+                          }}
+                          className="rounded border-gray-600 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span className="text-gray-300 text-sm">
+                          {extra.name} (+{Number(extra.price).toFixed(2)} BDT)
+                        </span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 

@@ -205,7 +205,7 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
                     <div key={extra.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-xl">
                       <div className='flex flex-col'>
                           <span className="text-gray-50 font-medium">{extra.name}</span>
-                          <span className="text-sm text-green-300">+ {extra.price.toFixed(2)} BDT</span>
+                          <span className="text-sm text-green-300">+ {Number(extra.price).toFixed(2)} BDT</span>
                       </div>
                       {isSelected ? (
                          <div className="flex items-center space-x-2">

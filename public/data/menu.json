@@ -24,8 +24,11 @@
         "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=1200&q=80",
         "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80"
       ],
-      "discount": null,
-      "finalPrice": 450
+      "discount": {
+        "type": "percentage",
+        "value": 10
+      },
+      "finalPrice": 405
     },
     {
       "id": 2,
@@ -44,15 +47,19 @@
       "uses": "Pork",
       "extraItemIds": [
         "cheese",
-        "water"
+        "water",
+        "fries"
       ],
       "images": [
         "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=1200&q=80",
         "https://images.unsplash.com/photo-1522184216315-1e1c7a2ff8f3?auto=format&fit=crop&w=1200&q=80",
         "https://images.unsplash.com/photo-1483137140003-ae073b395549?auto=format&fit=crop&w=1200&q=80"
       ],
-      "discount": null,
-      "finalPrice": 150
+      "discount": {
+        "type": "price",
+        "value": 20
+      },
+      "finalPrice": 130
     },
     {
       "id": 3,
