@@ -28,35 +28,6 @@ const statusStyles = {
 };
 
 const RestaurantName = "The Midnight Kitchen";
-const apiKey = ""; // API Key for LLM calls (will be empty string here)
-const model = "gemini-2.5-flash-preview-09-2025";
-const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-/**
- * Custom hook for exponential backoff retry logic.
- */
-const useFetchWithRetry = () => {
-  const fetchWithRetry = async (url, options, maxRetries = 5) => {
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const response = await fetch(url, options);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response;
-      } catch (error) {
-        if (i < maxRetries - 1) {
-          const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
-        } else {
-          console.error("Fetch failed after multiple retries:", error);
-          throw error;
-        }
-      }
-    }
-  };
-  return fetchWithRetry;
-};
 
 /**
  * Main Application Component
@@ -69,8 +40,6 @@ const App = ({ tableNumber: propTableNumber }) => {
   const [dataError, setDataError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [llmSuggestion, setLlmSuggestion] = useState('');
-  const [isLlmLoading, setIsLlmLoading] = useState(false);
   
   // New State for Modals and Cart
   const [cart, setCart] = useState([]);
@@ -83,7 +52,6 @@ const App = ({ tableNumber: propTableNumber }) => {
   const [isOrderSuccessModalOpen, setIsOrderSuccessModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
 
-  const fetchWithRetry = useFetchWithRetry();
   const [orderStatus, setOrderStatus] = useState({}); // Track order status updates
 
   // Update table number if prop changes
@@ -546,61 +514,7 @@ const App = ({ tableNumber: propTableNumber }) => {
     }
   }, []);
 
-
-  const fetchLlmSuggestion = useCallback(async () => {
-    if (!menuItems.length) {
-      setLlmSuggestion("Discover our carefully curated menu, crafted for an exceptional dining experience.");
-      return;
-    }
-
-    setIsLlmLoading(true);
-    setLlmSuggestion('');
-
-    const categoryLabels = menuCategories
-      .filter(c => c.key !== 'all')
-      .map(c => c.label)
-      .join(', ') || 'Chef-curated selections';
-
-    const highlightedDishes = menuItems
-      .slice(0, 3)
-      .map(d => d.name)
-      .join(', ') || 'our signature favorites';
-
-    const query = `You are a helpful restaurant assistant. Based on the current menu categories: ${categoryLabels}, and the popular dishes: ${highlightedDishes}, suggest a short, enticing opening message for the menu in a professional, dark-theme tone. Keep it under 20 words.`;
-
-    const payload = {
-        contents: [{ parts: [{ text: query }] }],
-        systemInstruction: { parts: [{ text: "Act as a professional restaurant menu greeting assistant." }] },
-    };
-
-    try {
-      const response = await fetchWithRetry(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-      });
-      const result = await response.json();
-
-      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) {
-        setLlmSuggestion(text.trim());
-      }
-    } catch (error) {
-      console.error("Error fetching LLM suggestion:", error);
-      setLlmSuggestion("Discover our carefully curated menu, crafted for an exceptional dining experience."); // Fallback
-    } finally {
-      setIsLlmLoading(false);
-    }
-  }, [fetchWithRetry, menuCategories, menuItems]);
-
   // --- Helper Effects ---
-
-  // Fetch suggestion when menu data is ready
-  useEffect(() => {
-    if (menuItems.length > 0) {
-      fetchLlmSuggestion();
-    }
-  }, [menuItems, fetchLlmSuggestion]);
 
   // Manage Toast messages
   useEffect(() => {
@@ -624,18 +538,6 @@ const App = ({ tableNumber: propTableNumber }) => {
         
         {/* 1 & 2: Header (Restaurant Name, Menu Text, Icon) */}
         <Header restaurantName={RestaurantName} />
-
-        {/* LLM Suggestion Banner */}
-        {/* <div className="mb-6 p-4 bg-indigo-900/40 border border-indigo-700 rounded-xl text-sm italic text-center text-indigo-200">
-            {isLlmLoading ? (
-                <div className="flex justify-center items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-300 mr-2"></div>
-                    Loading special greeting...
-                </div>
-            ) : (
-                llmSuggestion || "Taste the difference in every dish we prepare."
-            )}
-        </div> */}
 
         {/* 3: Search Bar */}
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
