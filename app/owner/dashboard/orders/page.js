@@ -455,18 +455,18 @@ export default function OrdersManagement() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">Orders Management</h1>
-        <div className="text-gray-400 text-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 lg:mb-6 gap-2">
+        <h1 className="text-2xl lg:text-3xl font-bold text-white">Orders Management</h1>
+        <div className="text-gray-400 text-xs lg:text-sm">
           {filteredOrders.length} {statusFilter === 'pending' ? 'pending' : statusFilter === 'processing' ? 'processing' : 'completed'} orders
         </div>
       </div>
 
       {/* Status Filter Buttons */}
-      <div className="mb-6 flex gap-3">
+      <div className="mb-4 lg:mb-6 flex flex-wrap gap-2 lg:gap-3">
         <button
           onClick={() => setStatusFilter('pending')}
-          className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+          className={`px-4 py-2 lg:px-6 lg:py-3 rounded-lg text-sm lg:text-base font-semibold transition-all ${
             statusFilter === 'pending'
               ? 'bg-yellow-600 text-white shadow-lg'
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -476,7 +476,7 @@ export default function OrdersManagement() {
         </button>
         <button
           onClick={() => setStatusFilter('processing')}
-          className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+          className={`px-4 py-2 lg:px-6 lg:py-3 rounded-lg text-sm lg:text-base font-semibold transition-all ${
             statusFilter === 'processing'
               ? 'bg-indigo-600 text-white shadow-lg'
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -486,7 +486,7 @@ export default function OrdersManagement() {
         </button>
         <button
           onClick={() => setStatusFilter('completed')}
-          className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+          className={`px-4 py-2 lg:px-6 lg:py-3 rounded-lg text-sm lg:text-base font-semibold transition-all ${
             statusFilter === 'completed'
               ? 'bg-green-600 text-white shadow-lg'
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -497,19 +497,19 @@ export default function OrdersManagement() {
       </div>
 
       {/* Table Status Overview */}
-      <div className="mb-6 bg-gray-800 rounded-xl p-4 border border-gray-700">
-        <h2 className="text-lg font-semibold text-white mb-3">Table Status</h2>
-        <div className="grid grid-cols-5 gap-2">
+      <div className="mb-4 lg:mb-6 bg-gray-800 rounded-xl p-3 lg:p-4 border border-gray-700">
+        <h2 className="text-base lg:text-lg font-semibold text-white mb-2 lg:mb-3">Table Status</h2>
+        <div className="grid grid-cols-5 sm:grid-cols-5 gap-2">
           {tables.map((table) => (
             <div
               key={table.number}
-              className={`p-3 rounded-lg text-center ${
+              className={`p-2 lg:p-3 rounded-lg text-center ${
                 table.status === 'processing'
                   ? 'bg-indigo-900 text-indigo-200'
                   : 'bg-gray-700 text-gray-300'
               }`}
             >
-              <div className="font-bold">Table {table.number}</div>
+              <div className="font-bold text-sm lg:text-base">Table {table.number}</div>
               <div className="text-xs mt-1">
                 {table.status === 'processing' ? 'Processing' : 'Empty'}
               </div>
@@ -520,13 +520,13 @@ export default function OrdersManagement() {
 
       {/* New Order Notification Popup */}
       {newOrderNotification && (
-        <div className="fixed top-4 right-4 z-50 bg-indigo-600 text-white p-4 rounded-xl shadow-2xl max-w-sm animate-slide-in">
+        <div className="fixed top-4 left-4 right-4 lg:left-auto lg:right-4 z-50 bg-indigo-600 text-white p-3 lg:p-4 rounded-xl shadow-2xl max-w-sm lg:max-w-sm animate-slide-in">
           <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3">
-              <Bell className="w-6 h-6 mt-1" />
-              <div>
-                <h3 className="font-bold text-lg">New Order!</h3>
-                <p className="text-sm mt-1">
+            <div className="flex items-start gap-2 lg:gap-3">
+              <Bell className="w-5 h-5 lg:w-6 lg:h-6 mt-1 flex-shrink-0" />
+              <div className="min-w-0">
+                <h3 className="font-bold text-base lg:text-lg">New Order!</h3>
+                <p className="text-xs lg:text-sm mt-1 break-words">
                   Table {newOrderNotification.tableNumber} - Order #{newOrderNotification.id.slice(-4)}
                   {newOrderNotification.priority && (
                     <span className={`ml-2 px-2 py-0.5 rounded text-xs ${priorityStyles[newOrderNotification.priority]?.bg || 'bg-gray-700'} ${priorityStyles[newOrderNotification.priority]?.text || 'text-gray-300'}`}>
@@ -541,24 +541,24 @@ export default function OrdersManagement() {
             </div>
             <button
               onClick={() => setNewOrderNotification(null)}
-              className="text-white hover:text-gray-200"
+              className="text-white hover:text-gray-200 flex-shrink-0 ml-2"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 lg:w-5 lg:h-5" />
             </button>
           </div>
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-3 lg:space-y-4">
         {filteredOrders.map((order) => (
           <div
             key={order.id}
-            className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition"
+            className="bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-700 hover:border-gray-600 transition"
           >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-xl font-bold text-white">Order #{order.id.slice(-4)}</h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-start mb-3 lg:mb-4 gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h3 className="text-lg lg:text-xl font-bold text-white">Order #{order.id.slice(-4)}</h3>
                   {order.priority && (() => {
                     const priorityStyle = priorityStyles[order.priority];
                     const PriorityIcon = priorityStyle?.icon;
@@ -570,92 +570,102 @@ export default function OrdersManagement() {
                     );
                   })()}
                 </div>
-                <p className="text-gray-400">Table: {order.tableNumber}</p>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-gray-400 text-sm lg:text-base">Table: {order.tableNumber}</p>
+                <p className="text-gray-500 text-xs lg:text-sm mt-1">
                   {formatTime(order.createdAt)}
                 </p>
               </div>
               <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${getStatusColor(order.status)}`}>
                 {getStatusIcon(order.status)}
-                <span className="text-sm font-medium capitalize">{order.status}</span>
+                <span className="text-xs lg:text-sm font-medium capitalize">{order.status}</span>
               </div>
             </div>
 
             {editingOrder === order.id ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-lg font-semibold text-white">Edit Order Items</h4>
+              <div className="space-y-3 lg:space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2">
+                  <h4 className="text-base lg:text-lg font-semibold text-white">Edit Order Items</h4>
                   <button
                     onClick={() => setShowAddItemModal(true)}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center gap-2"
+                    className="w-full sm:w-auto px-3 lg:px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base"
                   >
                     <Plus className="w-4 h-4" />
                     Add Item
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {editFormData.items.map((item, index) => (
-                    <div key={index} className="bg-gray-700 p-3 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{item.name}</p>
-                          <div className="flex items-center gap-2 mt-2">
+                  {editFormData.items.map((item, index) => {
+                    const isLaterOrder = item.isLaterOrder;
+                    return (
+                      <div key={index} className={`bg-gray-700 p-3 rounded-lg ${isLaterOrder ? 'border border-yellow-700/50' : ''}`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-white font-medium">{item.name}</p>
+                              {isLaterOrder && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-600/30 text-yellow-400 font-medium">
+                                  Later Order
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <button
+                                onClick={() => handleUpdateItemQuantity(index, -1)}
+                                className="p-1 bg-gray-600 rounded hover:bg-gray-500"
+                              >
+                                <Minus className="w-4 h-4 text-white" />
+                              </button>
+                              <span className="text-white font-semibold w-8 text-center">{item.quantity}</span>
+                              <button
+                                onClick={() => handleUpdateItemQuantity(index, 1)}
+                                className="p-1 bg-gray-600 rounded hover:bg-gray-500"
+                              >
+                                <Plus className="w-4 h-4 text-white" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.finalPrice || item.price}
+                              onChange={(e) => handleUpdatePrice(index, e.target.value)}
+                              className="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-sm"
+                            />
                             <button
-                              onClick={() => handleUpdateItemQuantity(index, -1)}
-                              className="p-1 bg-gray-600 rounded hover:bg-gray-500"
+                              onClick={() => handleRemoveItem(index)}
+                              className="p-1 bg-red-600 rounded hover:bg-red-500"
                             >
-                              <Minus className="w-4 h-4 text-white" />
-                            </button>
-                            <span className="text-white font-semibold w-8 text-center">{item.quantity}</span>
-                            <button
-                              onClick={() => handleUpdateItemQuantity(index, 1)}
-                              className="p-1 bg-gray-600 rounded hover:bg-gray-500"
-                            >
-                              <Plus className="w-4 h-4 text-white" />
+                              <Trash2 className="w-4 h-4 text-white" />
                             </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={item.finalPrice || item.price}
-                            onChange={(e) => handleUpdatePrice(index, e.target.value)}
-                            className="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-sm"
-                          />
-                          <button
-                            onClick={() => handleRemoveItem(index)}
-                            className="p-1 bg-red-600 rounded hover:bg-red-500"
-                          >
-                            <Trash2 className="w-4 h-4 text-white" />
-                          </button>
-                        </div>
+                        {item.extras && item.extras.length > 0 && (
+                          <div className="text-xs text-gray-400 mt-1">
+                            Extras: {item.extras.map(e => `${e.qty}x ${e.name}`).join(', ')}
+                          </div>
+                        )}
                       </div>
-                      {item.extras && item.extras.length > 0 && (
-                        <div className="text-xs text-gray-400 mt-1">
-                          Extras: {item.extras.map(e => `${e.qty}x ${e.name}`).join(', ')}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-                <div className="flex justify-between items-center pt-4 border-t border-gray-700">
-                  <div className="text-2xl font-bold text-green-400">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-3 lg:pt-4 border-t border-gray-700 gap-3">
+                  <div className="text-xl lg:text-2xl font-bold text-green-400">
                     {Number(editFormData.total).toFixed(2)} BDT
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 w-full sm:w-auto">
                     <button
                       onClick={() => {
                         setEditingOrder(null);
                         setEditFormData(null);
                       }}
-                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+                      className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm lg:text-base"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSaveEdit}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg flex items-center gap-2"
+                      className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base"
                     >
                       <Save className="w-4 h-4" />
                       Save
@@ -666,18 +676,34 @@ export default function OrdersManagement() {
             ) : (
               <>
                 <div className="mb-4">
+                  {order.hasLaterOrderItems && (
+                    <div className="mb-3 p-2 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
+                      <p className="text-xs text-yellow-400 font-semibold flex items-center gap-1">
+                        <Bell className="w-3 h-3" />
+                        This order contains items from later orders
+                      </p>
+                    </div>
+                  )}
                   <p className="text-sm text-gray-400 mb-2">Items:</p>
                   <ul className="space-y-1">
                     {order.items.map((item, index) => {
                       const itemPriority = item.priority || 'Medium';
                       const priorityLabel = itemPriority === 'High' ? 'Fast' : 'Normal';
+                      const isLaterOrder = item.isLaterOrder;
                       return (
-                        <li key={index} className="text-gray-300 flex items-center justify-between">
-                          <span>
-                            • {item.quantity}x {item.name} - {Number(item.finalPrice || item.price).toFixed(2)} BDT
-                            {item.extras && item.extras.length > 0 && (
-                              <span className="text-gray-500 text-xs ml-2">
-                                (+{item.extras.length} extras)
+                        <li key={index} className={`text-gray-300 flex items-center justify-between ${isLaterOrder ? 'bg-yellow-900/20 px-2 py-1 rounded' : ''}`}>
+                          <span className="flex items-center gap-2">
+                            <span>
+                              • {item.quantity}x {item.name} - {Number(item.finalPrice || item.price).toFixed(2)} BDT
+                              {item.extras && item.extras.length > 0 && (
+                                <span className="text-gray-500 text-xs ml-2">
+                                  (+{item.extras.length} extras)
+                                </span>
+                              )}
+                            </span>
+                            {isLaterOrder && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-600/30 text-yellow-400 font-medium">
+                                Later Order
                               </span>
                             )}
                           </span>
@@ -690,29 +716,29 @@ export default function OrdersManagement() {
                   </ul>
                 </div>
 
-                <div className="flex justify-between items-center pt-4 border-t border-gray-700">
-                  <div className="text-2xl font-bold text-green-400">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-3 lg:pt-4 border-t border-gray-700 gap-3">
+                  <div className="text-xl lg:text-2xl font-bold text-green-400">
                     {Number(order.total).toFixed(2)} BDT
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                     {order.status === 'pending' && (
                       <>
                         <button
                           onClick={() => handleEdit(order)}
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center gap-2"
+                          className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base"
                         >
                           <Edit2 className="w-4 h-4" />
-                          Edit
+                          <span>Edit</span>
                         </button>
                         <button
                           onClick={() => handleAcceptOrder(order.id)}
-                          className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg"
+                          className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm lg:text-base"
                         >
                           Accept
                         </button>
                         <button
                           onClick={() => handleCancelOrder(order.id)}
-                          className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg"
+                          className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm lg:text-base"
                         >
                           Cancel
                         </button>
@@ -721,7 +747,7 @@ export default function OrdersManagement() {
                     {order.status === 'processing' && (
                       <button
                         onClick={() => handleStatusChange(order.id, 'completed')}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg"
+                        className="w-full sm:w-auto px-3 lg:px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm lg:text-base"
                       >
                         Completed
                       </button>
@@ -729,7 +755,7 @@ export default function OrdersManagement() {
                     {order.status === 'completed' && (
                       <button
                         onClick={() => handleDone(order.id)}
-                        className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg"
+                        className="w-full sm:w-auto px-3 lg:px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm lg:text-base"
                       >
                         Done (Table Empty)
                       </button>
@@ -764,14 +790,14 @@ export default function OrdersManagement() {
 
       {/* Add Item Modal */}
       {showAddItemModal && (
-        <div className="fixed inset-0 z-50 bg-gray-900/95 flex items-center justify-center p-4" onClick={() => setShowAddItemModal(false)}>
+        <div className="fixed inset-0 z-50 bg-gray-900/95 flex items-center justify-center p-2 lg:p-4" onClick={() => setShowAddItemModal(false)}>
           <div
-            className="bg-gray-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
+            className="bg-gray-800 w-full max-w-2xl max-h-[95vh] lg:max-h-[90vh] overflow-y-auto rounded-xl lg:rounded-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6">
+            <div className="p-4 lg:p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-white">Add Item to Order</h2>
+                <h2 className="text-xl lg:text-2xl font-bold text-white">Add Item to Order</h2>
                 <button
                   onClick={() => setShowAddItemModal(false)}
                   className="p-2 bg-gray-700 rounded-full hover:bg-gray-600"
@@ -780,19 +806,19 @@ export default function OrdersManagement() {
                 </button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4 lg:space-y-6">
                 {/* Menu Items */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">Menu Items</h3>
-                  <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                  <h3 className="text-base lg:text-lg font-semibold text-white mb-2 lg:mb-3">Menu Items</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3 max-h-64 overflow-y-auto">
                     {menuItems.filter(item => item.status === 'Available').map((item) => (
                       <button
                         key={item.id}
                         onClick={() => handleAddItemToOrder(item, false)}
-                        className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition"
+                        className="p-2 lg:p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition"
                       >
-                        <div className="font-medium text-white">{item.name}</div>
-                        <div className="text-sm text-green-400 mt-1">
+                        <div className="font-medium text-white text-sm lg:text-base">{item.name}</div>
+                        <div className="text-xs lg:text-sm text-green-400 mt-1">
                           {Number(item.finalPrice || item.price).toFixed(2)} BDT
                         </div>
                       </button>
@@ -802,16 +828,16 @@ export default function OrdersManagement() {
 
                 {/* Extra Items */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">Extra Items</h3>
-                  <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                  <h3 className="text-base lg:text-lg font-semibold text-white mb-2 lg:mb-3">Extra Items</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3 max-h-64 overflow-y-auto">
                     {extraItems.map((item) => (
                       <button
                         key={item.id}
                         onClick={() => handleAddItemToOrder(item, true)}
-                        className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition"
+                        className="p-2 lg:p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition"
                       >
-                        <div className="font-medium text-white">{item.name}</div>
-                        <div className="text-sm text-green-400 mt-1">
+                        <div className="font-medium text-white text-sm lg:text-base">{item.name}</div>
+                        <div className="text-xs lg:text-sm text-green-400 mt-1">
                           {Number(item.price).toFixed(2)} BDT
                         </div>
                       </button>

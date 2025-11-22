@@ -32,6 +32,64 @@ export async function POST(request) {
     
     const data = readOrdersData(date);
     
+    // Check if there's an existing pending order for the same table
+    if (body.tableNumber) {
+      const existingPendingOrder = data.orders.find(
+        order => order.tableNumber === body.tableNumber && order.status === 'pending'
+      );
+      
+      if (existingPendingOrder) {
+        // Merge new items into existing pending order
+        const existingOrderIndex = data.orders.findIndex(order => order.id === existingPendingOrder.id);
+        
+        // Mark new items as later order items
+        const newItems = (body.items || []).map(item => ({
+          ...item,
+          isLaterOrder: true,
+          addedAt: new Date().toISOString(),
+        }));
+        
+        // Combine items
+        data.orders[existingOrderIndex].items = [
+          ...data.orders[existingOrderIndex].items,
+          ...newItems
+        ];
+        
+        // Update total
+        data.orders[existingOrderIndex].total = 
+          (data.orders[existingOrderIndex].total || 0) + (body.total || 0);
+        
+        // Update priority to highest
+        const priorityRank = { Low: 1, Medium: 2, High: 3 };
+        const existingPriority = priorityRank[data.orders[existingOrderIndex].priority || 'Medium'] || 2;
+        const newPriority = priorityRank[body.priority || 'Medium'] || 2;
+        if (newPriority > existingPriority) {
+          data.orders[existingOrderIndex].priority = body.priority || 'Medium';
+        }
+        
+        // Update timestamp
+        data.orders[existingOrderIndex].updatedAt = new Date().toISOString();
+        data.orders[existingOrderIndex].hasLaterOrderItems = true;
+        
+        if (writeOrdersData(data, date)) {
+          // Broadcast order update
+          broadcastMessage('order_update', data.orders[existingOrderIndex]);
+          
+          return NextResponse.json({ 
+            success: true, 
+            message: 'Order merged with existing pending order',
+            order: data.orders[existingOrderIndex],
+            merged: true
+          });
+        } else {
+          return NextResponse.json(
+            { success: false, error: 'Failed to merge order' },
+            { status: 500 }
+          );
+        }
+      }
+    }
+    
     // Generate order ID
     const timestamp = Date.now();
     const orderId = `ORD-${timestamp}`;
@@ -48,6 +106,7 @@ export async function POST(request) {
       updatedAt: new Date().toISOString(),
       customerInfo: body.customerInfo || {},
       notes: body.notes || '',
+      hasLaterOrderItems: false,
     };
     
     data.orders.push(newOrder);
@@ -100,6 +159,152 @@ export async function PUT(request) {
         { success: false, error: 'Order not found' },
         { status: 404 }
       );
+    }
+    
+    const currentOrder = data.orders[orderIndex];
+    const isAcceptingOrder = updateData.status === 'processing' && currentOrder.status === 'pending';
+    
+    // If accepting an order, check if there's already a processing order for the same table
+    if (isAcceptingOrder && currentOrder.tableNumber) {
+      // Check for existing processing order for the same table
+      const existingProcessingOrder = data.orders.find(
+        order => order.id !== id && 
+        order.tableNumber === currentOrder.tableNumber && 
+        (order.status === 'processing' || order.status === 'accepted')
+      );
+      
+      if (existingProcessingOrder) {
+        // Merge into existing processing order instead of creating a new one
+        const processingOrderIndex = data.orders.findIndex(order => order.id === existingProcessingOrder.id);
+        
+        // Get all pending orders for the same table (including the one being accepted)
+        const allPendingOrders = data.orders.filter(
+          order => order.tableNumber === currentOrder.tableNumber && 
+          order.status === 'pending'
+        );
+        
+        let mergedItems = [...existingProcessingOrder.items];
+        let mergedTotal = existingProcessingOrder.total || 0;
+        let highestPriority = existingProcessingOrder.priority || 'Medium';
+        
+        const priorityRank = { Low: 1, Medium: 2, High: 3 };
+        
+        // Merge all pending orders (including the one being accepted) into the processing order
+        allPendingOrders.forEach(pendingOrder => {
+          // Mark items from pending orders as later order items
+          const laterOrderItems = (pendingOrder.items || []).map(item => ({
+            ...item,
+            isLaterOrder: true,
+            addedAt: pendingOrder.createdAt || new Date().toISOString(),
+          }));
+          
+          mergedItems = [...mergedItems, ...laterOrderItems];
+          mergedTotal += (pendingOrder.total || 0);
+          
+          // Update priority to highest
+          const pendingPriority = priorityRank[pendingOrder.priority || 'Medium'] || 2;
+          const currentPriority = priorityRank[highestPriority] || 2;
+          if (pendingPriority > currentPriority) {
+            highestPriority = pendingOrder.priority || 'Medium';
+          }
+        });
+        
+        // Update the existing processing order with merged data
+        data.orders[processingOrderIndex] = {
+          ...data.orders[processingOrderIndex],
+          items: mergedItems,
+          total: mergedTotal,
+          priority: highestPriority,
+          hasLaterOrderItems: true,
+          updatedAt: new Date().toISOString(),
+        };
+        
+        // Mark all pending orders (including the one being accepted) as cancelled (merged)
+        allPendingOrders.forEach(pendingOrder => {
+          const pendingIndex = data.orders.findIndex(order => order.id === pendingOrder.id);
+          if (pendingIndex !== -1) {
+            data.orders[pendingIndex] = {
+              ...data.orders[pendingIndex],
+              status: 'cancelled',
+              mergedInto: existingProcessingOrder.id,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+        });
+        
+        // Don't update the current order since it's being merged into the processing order
+        // Instead, return the merged processing order
+        if (writeOrdersData(data, orderDate)) {
+          // Broadcast order update for the merged processing order
+          broadcastMessage('order_update', data.orders[processingOrderIndex]);
+          
+          return NextResponse.json({ 
+            success: true, 
+            message: 'Order merged with existing processing order',
+            order: data.orders[processingOrderIndex],
+            merged: true
+          });
+        } else {
+          return NextResponse.json(
+            { success: false, error: 'Failed to merge order' },
+            { status: 500 }
+          );
+        }
+      } else {
+        // No existing processing order, check for other pending orders to merge
+        const otherPendingOrders = data.orders.filter(
+          order => order.id !== id && 
+          order.tableNumber === currentOrder.tableNumber && 
+          order.status === 'pending'
+        );
+        
+        if (otherPendingOrders.length > 0) {
+          // Merge all pending orders into the current order
+          let mergedItems = [...currentOrder.items];
+          let mergedTotal = currentOrder.total || 0;
+          let highestPriority = currentOrder.priority || 'Medium';
+          
+          const priorityRank = { Low: 1, Medium: 2, High: 3 };
+          
+          otherPendingOrders.forEach(pendingOrder => {
+            // Mark items from pending orders as later order items
+            const laterOrderItems = (pendingOrder.items || []).map(item => ({
+              ...item,
+              isLaterOrder: true,
+              addedAt: pendingOrder.createdAt || new Date().toISOString(),
+            }));
+            
+            mergedItems = [...mergedItems, ...laterOrderItems];
+            mergedTotal += (pendingOrder.total || 0);
+            
+            // Update priority to highest
+            const pendingPriority = priorityRank[pendingOrder.priority || 'Medium'] || 2;
+            const currentPriority = priorityRank[highestPriority] || 2;
+            if (pendingPriority > currentPriority) {
+              highestPriority = pendingOrder.priority || 'Medium';
+            }
+          });
+          
+          // Update the current order with merged data
+          updateData.items = mergedItems;
+          updateData.total = mergedTotal;
+          updateData.priority = highestPriority;
+          updateData.hasLaterOrderItems = true;
+          
+          // Mark other pending orders as cancelled (merged)
+          otherPendingOrders.forEach(pendingOrder => {
+            const pendingIndex = data.orders.findIndex(order => order.id === pendingOrder.id);
+            if (pendingIndex !== -1) {
+              data.orders[pendingIndex] = {
+                ...data.orders[pendingIndex],
+                status: 'cancelled',
+                mergedInto: id,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+          });
+        }
+      }
     }
     
     // Update the order

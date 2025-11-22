@@ -47,15 +47,25 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-900 flex">
+      {/* Sidebar Overlay for Mobile */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={`${
-          sidebarOpen ? 'w-64' : 'w-0'
-        } bg-gray-800 border-r border-gray-700 transition-all duration-300 overflow-hidden`}
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${
+          sidebarOpen ? 'w-64' : 'w-0 lg:w-64'
+        } fixed lg:static inset-y-0 left-0 bg-gray-800 border-r border-gray-700 transition-all duration-300 overflow-hidden z-50`}
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-bold text-white">Admin Panel</h2>
+        <div className="p-4 lg:p-6 h-full overflow-y-auto">
+          <div className="flex items-center justify-between mb-6 lg:mb-8">
+            <h2 className="text-lg lg:text-xl font-bold text-white">Admin Panel</h2>
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden text-gray-400 hover:text-white"
@@ -72,6 +82,7 @@ export default function AdminLayout({ children }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
                       ? 'bg-indigo-600 text-white'
@@ -85,10 +96,10 @@ export default function AdminLayout({ children }) {
             })}
           </nav>
 
-          <div className="mt-8 pt-6 border-t border-gray-700">
+          <div className="mt-6 lg:mt-8 pt-6 border-t border-gray-700">
             <div className="px-4 py-2 mb-4">
               <p className="text-sm text-gray-400">Logged in as</p>
-              <p className="text-white font-semibold">{adminData.username}</p>
+              <p className="text-white font-semibold text-sm lg:text-base">{adminData.username}</p>
             </div>
             <button
               onClick={handleLogout}
@@ -102,9 +113,9 @@ export default function AdminLayout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col lg:ml-0">
         {/* Mobile Header */}
-        <header className="lg:hidden bg-gray-800 border-b border-gray-700 p-4">
+        <header className="lg:hidden bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-gray-400 hover:text-white"
@@ -114,18 +125,10 @@ export default function AdminLayout({ children }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-4 lg:p-6 overflow-auto">
           {children}
         </main>
       </div>
-
-      {/* Sidebar Overlay for Mobile */}
-      {sidebarOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
     </div>
   );
 }

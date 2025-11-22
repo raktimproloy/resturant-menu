@@ -190,10 +190,10 @@
         }
       ],
       "total": 250,
-      "status": "processing",
+      "status": "completed",
       "priority": "Medium",
       "createdAt": "2025-11-22T15:55:38.961Z",
-      "updatedAt": "2025-11-22T15:56:06.199Z",
+      "updatedAt": "2025-11-22T16:05:15.192Z",
       "customerInfo": {},
       "notes": ""
     },
@@ -212,12 +212,127 @@
         }
       ],
       "total": 300,
-      "status": "processing",
+      "status": "completed",
       "priority": "Medium",
       "createdAt": "2025-11-22T15:55:47.160Z",
-      "updatedAt": "2025-11-22T15:56:16.990Z",
+      "updatedAt": "2025-11-22T16:05:16.544Z",
       "customerInfo": {},
       "notes": ""
+    },
+    {
+      "id": "ORD-1763827526265",
+      "tableNumber": 1,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        },
+        {
+          "id": 6,
+          "name": "Kids Chicken Fingers",
+          "quantity": 1,
+          "price": 300,
+          "finalPrice": 300,
+          "extras": [],
+          "priority": "Medium",
+          "isLaterOrder": true,
+          "addedAt": "2025-11-22T16:05:32.543Z"
+        }
+      ],
+      "total": 550,
+      "status": "completed",
+      "priority": "Medium",
+      "createdAt": "2025-11-22T16:05:26.265Z",
+      "updatedAt": "2025-11-22T16:08:27.266Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": true
+    },
+    {
+      "id": "ORD-1763827550545",
+      "tableNumber": 1,
+      "items": [
+        {
+          "id": "extra-juice",
+          "name": "Apple Juice",
+          "quantity": 2,
+          "price": 60,
+          "finalPrice": 60,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 120,
+      "status": "completed",
+      "priority": "Medium",
+      "createdAt": "2025-11-22T16:05:50.545Z",
+      "updatedAt": "2025-11-22T16:08:28.039Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1763827726291",
+      "tableNumber": 1,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        },
+        {
+          "id": "extra-water",
+          "name": "Bottled Water",
+          "quantity": 1,
+          "price": 20,
+          "finalPrice": 20,
+          "extras": [],
+          "priority": "Medium",
+          "isLaterOrder": true,
+          "addedAt": "2025-11-22T16:09:03.080Z"
+        }
+      ],
+      "total": 270,
+      "status": "completed",
+      "priority": "Medium",
+      "createdAt": "2025-11-22T16:08:46.291Z",
+      "updatedAt": "2025-11-22T16:09:24.600Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": true
+    },
+    {
+      "id": "ORD-1763827743080",
+      "tableNumber": 1,
+      "items": [
+        {
+          "id": "extra-water",
+          "name": "Bottled Water",
+          "quantity": 1,
+          "price": 20,
+          "finalPrice": 20,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 20,
+      "status": "cancelled",
+      "priority": "Medium",
+      "createdAt": "2025-11-22T16:09:03.080Z",
+      "updatedAt": "2025-11-22T16:09:10.856Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "mergedInto": "ORD-1763827726291"
     }
   ]
 }
