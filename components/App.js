@@ -343,8 +343,36 @@ const App = ({ tableNumber: propTableNumber }) => {
   }, []);
 
   const handleAddToCart = useCallback((item) => {
-    setCart(prevCart => [...prevCart, item]);
-    setToastMessage(`Added ${item.quantity}x ${item.name} with ${item.priority} priority!`);
+    const finalPrice = item.finalPrice !== undefined ? item.finalPrice : item.price;
+    
+    setCart(prevCart => {
+      // Find existing item with same id, priority, isExtra flag, and no extras
+      const existingIndex = prevCart.findIndex(cartItem => 
+        cartItem.id === item.id && 
+        cartItem.priority === item.priority && 
+        Boolean(cartItem.isExtra) === Boolean(item.isExtra) && // Both should have same isExtra value (true or false/undefined)
+        cartItem.extras.length === 0 &&
+        item.extras.length === 0
+      );
+
+      if (existingIndex !== -1) {
+        // Item already exists, merge quantities
+        const existing = prevCart[existingIndex];
+        const newQuantity = existing.quantity + item.quantity;
+        const newTotal = finalPrice * newQuantity;
+        const updatedCart = prevCart.map((cartItem, index) =>
+          index === existingIndex
+            ? { ...cartItem, quantity: newQuantity, totalPrice: newTotal }
+            : cartItem
+        );
+        setToastMessage(`Added ${item.quantity}x ${item.name} to order! (Total: ${newQuantity}x)`);
+        return updatedCart;
+      } else {
+        // New item
+        setToastMessage(`Added ${item.quantity}x ${item.name} with ${item.priority} priority!`);
+        return [...prevCart, item];
+      }
+    });
   }, []);
 
   const handleDirectAddToCart = useCallback((item) => {

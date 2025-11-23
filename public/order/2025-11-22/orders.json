@@ -333,6 +333,81 @@
       "notes": "",
       "hasLaterOrderItems": false,
       "mergedInto": "ORD-1763827726291"
+    },
+    {
+      "id": "ORD-1763832062238",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 2,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        },
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [
+            {
+              "id": "water",
+              "name": "Bottled Water",
+              "price": "20",
+              "categoryId": "beverages",
+              "categoryLabel": "Beverages",
+              "qty": 1
+            }
+          ],
+          "priority": "Medium"
+        },
+        {
+          "id": "extra-juice",
+          "name": "Apple Juice",
+          "quantity": 1,
+          "price": 60,
+          "finalPrice": 60,
+          "extras": [],
+          "priority": "High",
+          "isLaterOrder": true,
+          "addedAt": "2025-11-22T17:21:35.292Z"
+        }
+      ],
+      "total": 830,
+      "status": "completed",
+      "priority": "High",
+      "createdAt": "2025-11-22T17:21:02.238Z",
+      "updatedAt": "2025-11-22T17:22:12.462Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": true
+    },
+    {
+      "id": "ORD-1763832272343",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 250,
+      "status": "processing",
+      "priority": "Medium",
+      "createdAt": "2025-11-22T17:24:32.343Z",
+      "updatedAt": "2025-11-22T17:28:43.341Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
     }
   ]
 }

@@ -4,14 +4,20 @@ import React, { useState, useMemo, useEffect } from 'react';
 const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedExtras, setSelectedExtras] = useState([]);
+  const [selectedMainItems, setSelectedMainItems] = useState([]); // Array to store multiple main items
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   // 6. Set priority
-  const [selectedPriority, setSelectedPriority] = useState('Medium'); 
+  const [selectedPriority, setSelectedPriority] = useState('Medium');
+  const [isAddToCartActive, setIsAddToCartActive] = useState(true); 
 
   if (!item) return null;
 
   useEffect(() => {
     setActiveImageIndex(0);
+    setIsAddToCartActive(true); // Reset when item changes
+    setSelectedMainItems([]); // Reset selected main items
+    setSelectedExtras([]); // Reset selected extras
+    setQuantity(1); // Reset quantity
   }, [item]);
 
   const fallbackImage = `https://placehold.co/600x400/475569/f1f5f9?text=${item.name.split(' ')[0]}`;
@@ -34,11 +40,16 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
       : 0;
 
   const handleExtraToggle = (extra) => {
-    setSelectedExtras(prev =>
-      prev.some(e => e.id === extra.id)
+    setSelectedExtras(prev => {
+      const newExtras = prev.some(e => e.id === extra.id)
         ? prev.filter(e => e.id !== extra.id)
-        : [...prev, { ...extra, qty: 1 }]
-    );
+        : [...prev, { ...extra, qty: 1 }];
+      // Auto-activate add to cart when extra is added
+      if (newExtras.length > 0 && !isAddToCartActive) {
+        setIsAddToCartActive(true);
+      }
+      return newExtras;
+    });
   };
 
   const handleExtraQuantity = (extra, delta) => {
@@ -56,22 +67,74 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
     });
   };
 
+  const handleAddMainItem = () => {
+    const mainItemEntry = {
+      id: Date.now() + Math.random(),
+      item: { ...item },
+      quantity: quantity,
+      priority: selectedPriority,
+    };
+    setSelectedMainItems(prev => [...prev, mainItemEntry]);
+    setQuantity(1); // Reset quantity after adding
+  };
+
+  const handleRemoveMainItem = (id) => {
+    setSelectedMainItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleUpdateMainItemQuantity = (id, delta) => {
+    setSelectedMainItems(prev => prev.map(entry => {
+      if (entry.id !== id) return entry;
+      const newQty = Math.max(1, entry.quantity + delta);
+      return { ...entry, quantity: newQty };
+    }));
+  };
+
+  const handleRemoveExtra = (extraId) => {
+    setSelectedExtras(prev => prev.filter(e => e.id !== extraId));
+  };
+
   const calculateSubtotal = useMemo(() => {
-    const basePrice = finalPrice * quantity;
+    const mainItemsPrice = selectedMainItems.reduce((sum, entry) => {
+      return sum + (finalPrice * entry.quantity);
+    }, 0);
     const extrasPrice = selectedExtras.reduce((sum, extra) => sum + extra.price * extra.qty, 0);
-    return basePrice + extrasPrice;
-  }, [finalPrice, quantity, selectedExtras]);
+    return mainItemsPrice + extrasPrice;
+  }, [finalPrice, selectedMainItems, selectedExtras]);
+
+  const calculateCurrentItemSubtotal = useMemo(() => {
+    const basePrice = finalPrice * quantity;
+    return basePrice;
+  }, [finalPrice, quantity]);
 
   const handleAddToCart = () => {
-    const cartItem = {
-      ...item,
-      quantity,
-      extras: selectedExtras,
-      totalPrice: calculateSubtotal,
-      priority: selectedPriority, // Include priority
-      cartId: Date.now() + Math.random(), // Unique ID for cart instance
-    };
-    onAddToCart(cartItem);
+    // Add all selected main items to cart
+    selectedMainItems.forEach(mainEntry => {
+      const cartItem = {
+        ...mainEntry.item,
+        quantity: mainEntry.quantity,
+        extras: [], // Main items don't have extras attached
+        totalPrice: finalPrice * mainEntry.quantity,
+        priority: mainEntry.priority,
+        cartId: Date.now() + Math.random(),
+      };
+      onAddToCart(cartItem);
+    });
+
+    // Add all selected extras as separate cart items
+    selectedExtras.forEach(extra => {
+      const cartItem = {
+        ...extra,
+        quantity: extra.qty,
+        extras: [],
+        totalPrice: extra.price * extra.qty,
+        priority: selectedPriority,
+        cartId: Date.now() + Math.random(),
+        isExtra: true, // Explicitly mark as extra item
+      };
+      onAddToCart(cartItem);
+    });
+
     onClose();
   };
   
@@ -158,28 +221,43 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
               </span>
             )}
           </div>
-          
-          {/* Priority Selection (6. Set priority) */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-indigo-300 mb-3">Set Priority</h3>
-            <div className="flex space-x-3">
-                {priorities.map(p => {
-                    const style = priorityStyles[p];
-                    const Icon = style.icon;
-                    return (
-                        <button
-                            key={p}
-                            onClick={() => setSelectedPriority(p)}
-                            className={`flex-1 flex items-center justify-center p-3 rounded-xl font-semibold transition ${p === selectedPriority ? `${style.bg} ${style.text} ring-2 ring-offset-2 ring-offset-gray-800 ring-${style.text.split('-')[1]}-500` : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
-                        >
-                            <Icon className="w-5 h-5 mr-1" />
-                            {p}
-                        </button>
-                    );
-                })}
-            </div>
-          </div>
-
+{selectedMainItems.length === 0 && (
+                <div className="mb-6 p-4 bg-gray-700 rounded-xl">
+                  <h3 className="text-lg font-semibold text-indigo-300 mb-3">Add {item.name}</h3>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-3 bg-gray-800 p-2 rounded-xl">
+                      <button
+                        onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                        className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="w-5 h-5 text-white" />
+                      </button>
+                      <span className="text-xl font-bold w-6 text-center">{quantity}</span>
+                      <button
+                        onClick={() => setQuantity(prev => prev + 1)}
+                        className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-sm text-gray-400">Price</div>
+                        <div className="text-lg font-bold text-green-400">{calculateCurrentItemSubtotal.toFixed(2)} BDT</div>
+                      </div>
+                      <button
+                        onClick={handleAddMainItem}
+                        className="flex items-center justify-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-500 transition"
+                      >
+                        <Plus className="w-5 h-5 mr-1" />
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
           {/* Include Items & Uses - Only show for non-extra items */}
           {!item.isExtra && (
             <div className="space-y-4 mb-6">
@@ -258,32 +336,144 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
             </div>
           )}
 
-          {/* Quantity and Add to Cart Button */}
-          <div className="flex justify-between items-center pt-4 border-t border-gray-700">
-            <div className="flex items-center space-x-3 bg-gray-700 p-2 rounded-xl">
+          {/* Selected Items List - Only show when isAddToCartActive is true */}
+          {isAddToCartActive && (
+            <>
+              {/* Selected Main Items */}
+              {selectedMainItems.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-indigo-300 mb-3">Selected Items</h3>
+                  <div className="space-y-3">
+                    {selectedMainItems.map(mainEntry => (
+                      <div key={mainEntry.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-xl">
+                        <div className="flex items-center gap-3 flex-1">
+                          <img
+                            src={mainEntry.item.images?.[0] || fallbackImage}
+                            alt={mainEntry.item.name}
+                            className="w-12 h-12 object-cover rounded-lg"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = fallbackImage;
+                            }}
+                          />
+                          <div className="flex flex-col flex-1">
+                            <span className="text-gray-50 font-medium">{mainEntry.item.name}</span>
+                            <span className="text-sm text-green-300">
+                              {finalPrice.toFixed(2)} BDT × {mainEntry.quantity} = {(finalPrice * mainEntry.quantity).toFixed(2)} BDT
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleUpdateMainItemQuantity(mainEntry.id, -1)}
+                            className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                          >
+                            <Minus className="w-4 h-4 text-white" />
+                          </button>
+                          <span className="text-lg font-bold w-4 text-center">{mainEntry.quantity}</span>
+                          <button
+                            onClick={() => handleUpdateMainItemQuantity(mainEntry.id, 1)}
+                            className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                          >
+                            <Plus className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            onClick={() => handleRemoveMainItem(mainEntry.id)}
+                            className="ml-2 p-1 bg-red-600 rounded-full hover:bg-red-500 transition"
+                            aria-label="Remove item"
+                          >
+                            <X className="w-4 h-4 text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Selected Extras */}
+              {selectedExtras.length > 0 && (
+                <div className="mb-6">
+                  {/* {selectedMainItems.length > 0 && (
+                    <h3 className="text-lg font-semibold text-indigo-300 mb-3">Selected Extras</h3>
+                  )} */}
+                  <div className="space-y-3">
+                    {selectedExtras.map(extra => {
+                      const extraImage = extra.images?.[0] || `https://placehold.co/60x60/475569/f1f5f9?text=${extra.name.split(' ')[0]}`;
+                      return (
+                        <div key={extra.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-xl">
+                          <div className="flex items-center gap-3 flex-1">
+                            <img
+                              src={extraImage}
+                              alt={extra.name}
+                              className="w-12 h-12 object-cover rounded-lg"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `https://placehold.co/60x60/475569/f1f5f9?text=${extra.name.split(' ')[0]}`;
+                              }}
+                            />
+                            <div className="flex flex-col flex-1">
+                              <span className="text-gray-50 font-medium">{extra.name}</span>
+                              <span className="text-sm text-green-300">
+                                {Number(extra.price).toFixed(2)} BDT × {extra.qty} = {(extra.price * extra.qty).toFixed(2)} BDT
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleExtraQuantity(extra, -1)}
+                              className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                            >
+                              <Minus className="w-4 h-4 text-white" />
+                            </button>
+                            <span className="text-lg font-bold w-4 text-center">{extra.qty}</span>
+                            <button
+                              onClick={() => handleExtraQuantity(extra, 1)}
+                              className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                            >
+                              <Plus className="w-4 h-4 text-white" />
+                            </button>
+                            <button
+                              onClick={() => handleRemoveExtra(extra.id)}
+                              className="ml-2 p-1 bg-red-600 rounded-full hover:bg-red-500 transition"
+                              aria-label="Remove extra"
+                            >
+                              <X className="w-4 h-4 text-white" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+          {
+            selectedMainItems.length > 0 || selectedExtras.length > 0
+            ? (
+            <div className="mb-4 p-4 bg-gray-700 rounded-xl">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-xl font-bold text-white">Total:</span>
+                <span className="text-2xl font-bold text-green-400">{calculateSubtotal.toFixed(2)} BDT</span>
+              </div>
               <button
-                onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
-                aria-label="Decrease quantity"
+                onClick={() => {
+                  if (selectedMainItems.length > 0 || selectedExtras.length > 0) {
+                    handleAddToCart();
+                  } else {
+                    setIsAddToCartActive(true);
+                  }
+                }}
+                className="w-full flex items-center justify-center px-6 py-3 bg-green-500 text-gray-900 font-extrabold rounded-xl shadow-lg hover:bg-green-400 transition-transform duration-100 transform active:scale-[0.98]"
               >
-                <Minus className="w-5 h-5 text-white" />
-              </button>
-              <span className="text-xl font-bold w-6 text-center">{quantity}</span>
-              <button
-                onClick={() => setQuantity(prev => prev + 1)}
-                className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
-                aria-label="Increase quantity"
-              >
-                <Plus className="w-5 h-5 text-white" />
+                Add All to Cart ({calculateSubtotal.toFixed(2)} BDT)
               </button>
             </div>
-            <button
-              onClick={handleAddToCart}
-              className="flex items-center justify-center px-6 py-3 bg-green-500 text-gray-900 font-extrabold rounded-xl shadow-lg hover:bg-green-400 transition-transform duration-100 transform active:scale-[0.98]"
-            >
-              Add to Cart ({calculateSubtotal.toFixed(2)} BDT)
-            </button>
-          </div>
+
+            )
+            : null
+          }
         </div>
       </div>
     </div>
