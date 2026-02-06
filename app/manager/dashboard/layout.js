@@ -3,27 +3,27 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Utensils, PlusCircle, ShoppingBag, LogOut, Menu as MenuIcon, LayoutDashboard } from 'lucide-react';
+import { Utensils, PlusCircle, ShoppingBag, LogOut, Menu as MenuIcon } from 'lucide-react';
 
-export default function OwnerLayout({ children }) {
+export default function ManagerLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [adminData, setAdminData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    // Check if owner is logged in
+    // Check if manager is logged in
     const token = localStorage.getItem('adminToken');
     const admin = localStorage.getItem('adminData');
 
     if (!token || !admin) {
-      router.push('/owner');
+      router.push('/manager');
       return;
     }
 
     const adminObj = JSON.parse(admin);
-    if (adminObj.role !== 'owner') {
-      router.push('/owner');
+    if (adminObj.role !== 'manager') {
+      router.push('/manager');
       return;
     }
 
@@ -33,15 +33,13 @@ export default function OwnerLayout({ children }) {
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminData');
-    router.push('/owner');
+    router.push('/manager');
   };
 
   const navItems = [
-    { href: '/owner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/owner/dashboard/categories', label: 'Categories', icon: Utensils },
-    { href: '/owner/dashboard/extras', label: 'Extras', icon: PlusCircle },
-    { href: '/owner/dashboard/menu', label: 'Menu', icon: Utensils },
-    { href: '/owner/dashboard/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/manager/dashboard/menu', label: 'Menu', icon: Utensils },
+    { href: '/manager/dashboard/extras', label: 'Extras', icon: PlusCircle },
+    { href: '/manager/dashboard/orders', label: 'Orders', icon: ShoppingBag },
   ];
 
   if (!adminData) {
@@ -72,7 +70,7 @@ export default function OwnerLayout({ children }) {
       >
         <div className="p-4 lg:p-6 h-full overflow-y-auto">
           <div className="flex items-center justify-between mb-6 lg:mb-8">
-            <h2 className="text-lg lg:text-xl font-bold text-white">Owner Panel</h2>
+            <h2 className="text-lg lg:text-xl font-bold text-white">Manager Panel</h2>
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden text-gray-400 hover:text-white"
@@ -107,7 +105,7 @@ export default function OwnerLayout({ children }) {
             <div className="px-4 py-2 mb-4">
               <p className="text-sm text-gray-400">Logged in as</p>
               <p className="text-white font-semibold text-sm lg:text-base">{adminData.username}</p>
-              <p className="text-gray-500 text-xs">Owner</p>
+              <p className="text-gray-500 text-xs">Manager</p>
             </div>
             <button
               onClick={handleLogout}

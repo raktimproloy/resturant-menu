@@ -22,6 +22,12 @@ const AdminSchema = new mongoose.Schema({
     required: true,
     minlength: 6,
   },
+  role: {
+    type: String,
+    required: true,
+    enum: ['owner', 'manager', 'cashier'],
+    default: 'cashier',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

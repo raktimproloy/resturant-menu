@@ -46,6 +46,7 @@ export async function POST(request) {
         id: admin._id,
         username: admin.username,
         email: admin.email,
+        role: admin.role,
       },
       JWT_SECRET,
       { expiresIn: '7d' }
@@ -60,6 +61,7 @@ export async function POST(request) {
         id: admin._id,
         username: admin.username,
         email: admin.email,
+        role: admin.role,
       },
     });
   } catch (error) {

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChefHat, Mail, Lock, LogIn } from 'lucide-react';
 
-export default function OwnerLogin() {
+export default function ManagerLogin() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
@@ -21,8 +21,8 @@ export default function OwnerLogin() {
 
     if (token && adminData) {
       const admin = JSON.parse(adminData);
-      if (admin.role === 'owner') {
-        router.push('/owner/dashboard');
+      if (admin.role === 'manager') {
+        router.push('/manager/dashboard');
       }
     }
   }, [router]);
@@ -52,19 +52,19 @@ export default function OwnerLogin() {
       const data = await response.json();
 
       if (data.success) {
-        // Check if user is an owner
-        if (data.admin.role !== 'owner') {
-          setError('Access denied. This login is for owners only.');
+        // Check if the user is a manager
+        if (data.admin.role !== 'manager') {
+          setError('Access denied. This login is for managers only.');
           setLoading(false);
           return;
         }
-        
+
         // Store token in localStorage
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminData', JSON.stringify(data.admin));
         
-        // Redirect to admin dashboard
-        router.push('/owner/dashboard');
+        // Redirect to manager dashboard
+        router.push('/manager/dashboard');
       } else {
         setError(data.error || 'Login failed');
       }
@@ -85,7 +85,7 @@ export default function OwnerLogin() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
               <ChefHat className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Owner Login</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Manager Login</h1>
             <p className="text-gray-400">Access your admin panel</p>
           </div>
 
@@ -112,7 +112,7 @@ export default function OwnerLogin() {
                   onChange={handleChange}
                   required
                   className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="admin@restaurant.com"
+                  placeholder="manager@restaurant.com"
                 />
               </div>
             </div>
@@ -165,8 +165,8 @@ export default function OwnerLogin() {
           </div>
 
           <div className="mt-4 text-center">
-            <Link href="/manager" className="text-gray-500 hover:text-gray-400 text-sm">
-              Manager Login
+            <Link href="/owner" className="text-gray-500 hover:text-gray-400 text-sm">
+              Owner Login
             </Link>
             {' | '}
             <Link href="/cashier" className="text-gray-500 hover:text-gray-400 text-sm">
@@ -178,5 +178,4 @@ export default function OwnerLogin() {
     </div>
   );
 }
-
 

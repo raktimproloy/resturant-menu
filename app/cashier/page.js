@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChefHat, Mail, Lock, LogIn } from 'lucide-react';
 
-export default function OwnerLogin() {
+export default function CashierLogin() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
@@ -21,8 +21,8 @@ export default function OwnerLogin() {
 
     if (token && adminData) {
       const admin = JSON.parse(adminData);
-      if (admin.role === 'owner') {
-        router.push('/owner/dashboard');
+      if (admin.role === 'cashier') {
+        router.push('/cashier/dashboard');
       }
     }
   }, [router]);
@@ -52,25 +52,24 @@ export default function OwnerLogin() {
       const data = await response.json();
 
       if (data.success) {
-        // Check if user is an owner
-        if (data.admin.role !== 'owner') {
-          setError('Access denied. This login is for owners only.');
+        // Check if user is a cashier
+        if (data.admin.role !== 'cashier') {
+          setError('Access denied. This login is for cashiers only.');
           setLoading(false);
           return;
         }
-        
-        // Store token in localStorage
+
+        // Store token and admin data
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminData', JSON.stringify(data.admin));
-        
-        // Redirect to admin dashboard
-        router.push('/owner/dashboard');
+
+        // Redirect to cashier dashboard
+        router.push('/cashier/dashboard');
       } else {
         setError(data.error || 'Login failed');
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError('An error occurred. Please try again.');
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -80,23 +79,20 @@ export default function OwnerLogin() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
-          {/* Logo/Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
               <ChefHat className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Owner Login</h1>
-            <p className="text-gray-400">Access your admin panel</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Cashier Login</h1>
+            <p className="text-gray-400">Sign in to your cashier account</p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-6 p-3 bg-red-900/40 border border-red-700 rounded-lg text-red-200 text-sm">
               {error}
             </div>
           )}
 
-          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -112,7 +108,7 @@ export default function OwnerLogin() {
                   onChange={handleChange}
                   required
                   className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="admin@restaurant.com"
+                  placeholder="cashier@restaurant.com"
                 />
               </div>
             </div>
@@ -165,12 +161,12 @@ export default function OwnerLogin() {
           </div>
 
           <div className="mt-4 text-center">
-            <Link href="/manager" className="text-gray-500 hover:text-gray-400 text-sm">
-              Manager Login
+            <Link href="/owner" className="text-gray-500 hover:text-gray-400 text-sm">
+              Owner Login
             </Link>
             {' | '}
-            <Link href="/cashier" className="text-gray-500 hover:text-gray-400 text-sm">
-              Cashier Login
+            <Link href="/manager" className="text-gray-500 hover:text-gray-400 text-sm">
+              Manager Login
             </Link>
           </div>
         </div>
@@ -178,5 +174,3 @@ export default function OwnerLogin() {
     </div>
   );
 }
-
-

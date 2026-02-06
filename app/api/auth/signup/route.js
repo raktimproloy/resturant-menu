@@ -7,12 +7,19 @@ export async function POST(request) {
     await connectDB();
 
     const body = await request.json();
-    const { username, email, password } = body;
+    const { username, email, password, role } = body;
 
     // Validation
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !role) {
       return NextResponse.json(
         { success: false, error: 'All fields are required' },
+        { status: 400 }
+      );
+    }
+
+    if (!['owner', 'manager', 'cashier'].includes(role)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid role' },
         { status: 400 }
       );
     }
@@ -41,6 +48,7 @@ export async function POST(request) {
       username,
       email,
       password,
+      role,
     });
 
     await admin.save();

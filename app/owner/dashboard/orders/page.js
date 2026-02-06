@@ -70,6 +70,55 @@ export default function OrdersManagement() {
     }
   }, []);
 
+  // Repeated sound notification for new orders
+  useEffect(() => {
+    let interval;
+    
+    if (newOrderNotification) {
+      const playBeep = () => {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          // Play a pleasant "ding-dong" sound
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+          osc.frequency.exponentialRampToValueAtTime(1046.5, ctx.currentTime + 0.1); // C6
+          
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+          
+          osc.start();
+          osc.stop(ctx.currentTime + 0.5);
+          
+          // Close context after sound finishes to free resources
+          setTimeout(() => {
+            ctx.close();
+          }, 600);
+        } catch (e) {
+          console.error("Audio play failed", e);
+        }
+      };
+
+      // Play immediately
+      playBeep();
+      
+      // Repeat every 2 seconds
+      interval = setInterval(playBeep, 2000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [newOrderNotification]);
+
   const fetchOrders = async () => {
     try {
       const response = await fetch('/api/orders?date=' + getTodayDateString());
