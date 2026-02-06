@@ -7,6 +7,7 @@ import Header from './Header';
 import MenuCard from './MenuCard';
 import DetailModal from './DetailModal';
 import QueueModal from './QueueModal';
+import UserEditOrderModal from './UserEditOrderModal';
 import OrderConfirmationModal from './OrderConfirmationModal';
 import CategorySelector from './CategorySelector';
 import SearchBar from './SearchBar';
@@ -48,6 +49,8 @@ const App = ({ tableNumber: propTableNumber }) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isQueueModalOpen, setIsQueueModalOpen] = useState(false); // 3. Queue modal state
+  const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
   const [isOrderSuccessModalOpen, setIsOrderSuccessModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -542,6 +545,66 @@ const App = ({ tableNumber: propTableNumber }) => {
     }
   }, []);
 
+  const handleEditOrder = useCallback((order) => {
+    setEditingOrder(order);
+    setIsUserEditModalOpen(true);
+    // Optionally close QueueModal or keep it open behind? 
+    // It's better to close it or keep it. Since both are modals, z-index matters.
+    // Let's close QueueModal to avoid stacking issues unless we handle z-index well.
+    // But user might want to go back.
+    // For simplicity, let's keep QueueModal open if it was open, or close it.
+    // If we use high z-index for EditModal, it's fine.
+    // QueueModal has z-50. UserEditOrderModal has z-[60]. So it will be on top.
+  }, []);
+
+  const handleSaveEditedOrder = useCallback(async (orderId, newItems, newTotal) => {
+    try {
+      if (newItems.length === 0) {
+        // If all items removed, cancel the order
+        if (confirm('All items removed. Do you want to cancel this order?')) {
+          const response = await fetch(`/api/orders?id=${orderId}`, {
+            method: 'DELETE',
+          });
+          const data = await response.json();
+          if (data.success) {
+             setToastMessage(`Order #${orderId.slice(-4)} cancelled.`);
+             setIsUserEditModalOpen(false);
+             setEditingOrder(null);
+             // Queue update will happen via WebSocket or fetchUserOrders
+             fetchUserOrders();
+          }
+        }
+        return;
+      }
+
+      const response = await fetch('/api/orders', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: orderId,
+          items: newItems,
+          total: newTotal,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setToastMessage(`Order #${orderId.slice(-4)} updated!`);
+        setIsUserEditModalOpen(false);
+        setEditingOrder(null);
+        
+        fetchUserOrders();
+      } else {
+        alert(data.error || 'Failed to update order');
+      }
+    } catch (error) {
+      console.error('Error updating order:', error);
+      alert('An error occurred while updating the order');
+    }
+  }, [fetchUserOrders]);
+
   // --- Helper Effects ---
 
   // Manage Toast messages
@@ -678,16 +741,28 @@ const App = ({ tableNumber: propTableNumber }) => {
       
       {/* 5. Queue Modal */}
       {isQueueModalOpen && (
-        <QueueModal
+          <QueueModal
             queue={queue}
             statusStyles={statusStyles}
             priorityStyles={priorityStyles}
             onClose={() => setIsQueueModalOpen(false)}
             onFinishOrder={handleFinishOrder}
-        />
-      )}
+            onEditOrder={handleEditOrder}
+          />
+        )}
 
-      {/* Toast Message for quick adds */}
+      {/* User Edit Order Modal */}
+        <UserEditOrderModal 
+          order={editingOrder}
+          isOpen={isUserEditModalOpen}
+          onClose={() => {
+            setIsUserEditModalOpen(false);
+            setEditingOrder(null);
+          }}
+          onSave={handleSaveEditedOrder}
+        />
+
+        {/* Toast Message for quick adds */}
       {toastMessage && (
         <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 p-3 bg-green-500 text-gray-900 rounded-xl shadow-2xl font-semibold transition-all duration-300">
             {toastMessage}

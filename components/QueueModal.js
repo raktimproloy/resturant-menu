@@ -1,7 +1,7 @@
-import { X, ListOrdered, Truck } from 'lucide-react';
+import { X, ListOrdered, Truck, Edit } from 'lucide-react';
 import React, {useMemo} from 'react';
 
-const QueueModal = ({ queue, statusStyles, priorityStyles, onClose, onFinishOrder }) => {
+const QueueModal = ({ queue, statusStyles, priorityStyles, onClose, onFinishOrder, onEditOrder }) => {
     // Sort queue by priority (High: 3, Medium: 2, Low: 1) and then by time added (FIFO)
     const sortedQueue = useMemo(() => {
         const prioritiesOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
@@ -90,8 +90,17 @@ const QueueModal = ({ queue, statusStyles, priorityStyles, onClose, onFinishOrde
                                             })}
                                         </ul>
                                         
-                                        <div className="mt-4 pt-3 border-t border-gray-700">
-                                            <div className="text-lg font-bold text-green-400 text-right">
+                                        <div className="mt-4 pt-3 border-t border-gray-700 flex justify-between items-center">
+                                            {order.status === 'Pending' && (
+                                                <button
+                                                    onClick={() => onEditOrder(order)}
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 transition text-sm font-bold border border-indigo-500/30"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                    Edit Order
+                                                </button>
+                                            )}
+                                            <div className="text-lg font-bold text-green-400 text-right ml-auto">
                                                 Total: {Number(order.total).toFixed(2)} BDT
                                             </div>
                                         </div>

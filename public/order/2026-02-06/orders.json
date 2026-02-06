@@ -102,10 +102,10 @@
         }
       ],
       "total": 60,
-      "status": "processing",
+      "status": "completed",
       "priority": "Medium",
       "createdAt": "2026-02-06T04:37:59.288Z",
-      "updatedAt": "2026-02-06T04:38:10.893Z",
+      "updatedAt": "2026-02-06T04:51:04.461Z",
       "customerInfo": {},
       "notes": "",
       "hasLaterOrderItems": false
@@ -125,10 +125,145 @@
         }
       ],
       "total": 60,
-      "status": "pending",
+      "status": "cancelled",
       "priority": "Medium",
       "createdAt": "2026-02-06T04:38:35.338Z",
-      "updatedAt": "2026-02-06T04:38:35.338Z",
+      "updatedAt": "2026-02-06T04:50:51.299Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1770353471423",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": "extra-juice",
+          "name": "Apple Juice",
+          "quantity": 1,
+          "price": 60,
+          "finalPrice": 60,
+          "extras": [],
+          "priority": "Medium"
+        },
+        {
+          "id": "extra-soup",
+          "name": "Soup of the Day",
+          "quantity": 1,
+          "price": 80,
+          "finalPrice": 80,
+          "extras": [],
+          "priority": "Medium",
+          "isLaterOrder": true,
+          "addedAt": "2026-02-06T04:51:30.544Z"
+        }
+      ],
+      "total": 140,
+      "status": "cancelled",
+      "priority": "Medium",
+      "createdAt": "2026-02-06T04:51:11.423Z",
+      "updatedAt": "2026-02-06T05:00:15.804Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": true
+    },
+    {
+      "id": "ORD-1770354094903",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": "water",
+          "name": "Bottled Water",
+          "quantity": 2,
+          "price": "20",
+          "finalPrice": "20",
+          "extras": [],
+          "priority": "Medium"
+        },
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 2,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 540,
+      "status": "cancelled",
+      "priority": "Medium",
+      "createdAt": "2026-02-06T05:01:34.903Z",
+      "updatedAt": "2026-02-06T05:12:48.248Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1770354780241",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 250,
+      "status": "cancelled",
+      "priority": "Medium",
+      "createdAt": "2026-02-06T05:13:00.241Z",
+      "updatedAt": "2026-02-06T05:13:22.219Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1770354825768",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 250,
+      "status": "cancelled",
+      "priority": "Medium",
+      "createdAt": "2026-02-06T05:13:45.768Z",
+      "updatedAt": "2026-02-06T05:13:54.425Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1770355298804",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 2,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 500,
+      "status": "completed",
+      "priority": "Medium",
+      "createdAt": "2026-02-06T05:21:38.804Z",
+      "updatedAt": "2026-02-06T05:21:58.933Z",
       "customerInfo": {},
       "notes": "",
       "hasLaterOrderItems": false

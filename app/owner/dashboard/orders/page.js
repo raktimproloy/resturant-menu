@@ -1,8 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Clock, CheckCircle, Hourglass, Truck, ShoppingBag, X, Edit2, Trash2, Save, Plus, Minus, Bell, ChevronUp, ChevronDown, ListOrdered } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { getTodayDateString } from '@/lib/utils';
+import OrderReceipt from './components/OrderReceipt';
+import StatusFilter from './components/StatusFilter';
+import TableStatus from './components/TableStatus';
+import OrderNotification from './components/OrderNotification';
+import OrderCard from './components/OrderCard';
+import AddItemModal from './components/AddItemModal';
+import OrderListEmptyState from './components/OrderListEmptyState';
 
 export default function OrdersManagement() {
   const [orders, setOrders] = useState([]);
@@ -13,14 +19,20 @@ export default function OrdersManagement() {
   const [tables, setTables] = useState(Array.from({ length: 10 }, (_, i) => ({ number: i + 1, status: 'empty' })));
   const [statusFilter, setStatusFilter] = useState('pending'); // Default to pending
   const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [mutedOrders, setMutedOrders] = useState(new Set());
   const [menuItems, setMenuItems] = useState([]);
   const [extraItems, setExtraItems] = useState([]);
   
-  const priorityStyles = {
-    Low: { text: 'text-yellow-400', bg: 'bg-yellow-400/20', icon: ChevronDown },
-    Medium: { text: 'text-indigo-400', bg: 'bg-indigo-400/20', icon: ListOrdered },
-    High: { text: 'text-red-500', bg: 'bg-red-500/20', icon: ChevronUp },
-  };
+  const [printOrder, setPrintOrder] = useState(null);
+
+  // Print Logic
+  useEffect(() => {
+    if (printOrder) {
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    }
+  }, [printOrder]);
 
   // WebSocket connection for real-time updates
   useEffect(() => {
@@ -70,54 +82,36 @@ export default function OrdersManagement() {
     }
   }, []);
 
-  // Repeated sound notification for new orders
   useEffect(() => {
     let interval;
-    
-    if (newOrderNotification) {
+    const shouldPlay = !!newOrderNotification && !mutedOrders.has(newOrderNotification.id);
+    if (shouldPlay) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
       const playBeep = () => {
-        try {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (!AudioContext) return;
-          
-          const ctx = new AudioContext();
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          
-          // Play a pleasant "ding-dong" sound
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-          osc.frequency.exponentialRampToValueAtTime(1046.5, ctx.currentTime + 0.1); // C6
-          
-          gain.gain.setValueAtTime(0.3, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-          
-          osc.start();
-          osc.stop(ctx.currentTime + 0.5);
-          
-          // Close context after sound finishes to free resources
-          setTimeout(() => {
-            ctx.close();
-          }, 600);
-        } catch (e) {
-          console.error("Audio play failed", e);
-        }
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1046.5, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+        setTimeout(() => {
+          ctx.close();
+        }, 600);
       };
-
-      // Play immediately
       playBeep();
-      
-      // Repeat every 2 seconds
       interval = setInterval(playBeep, 2000);
     }
-    
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [newOrderNotification]);
+  }, [newOrderNotification, mutedOrders]);
 
   const fetchOrders = async () => {
     try {
@@ -202,6 +196,14 @@ export default function OrdersManagement() {
 
       const data = await response.json();
       if (data.success) {
+        // Clear notification if it matches
+        if (newOrderNotification && newOrderNotification.id === editingOrder) {
+          setNewOrderNotification(null);
+        }
+
+        // Show print dialog
+        setPrintOrder(data.order);
+
         // Broadcast update
         await fetch('/api/broadcast', {
           method: 'POST',
@@ -242,6 +244,14 @@ export default function OrdersManagement() {
 
       const data = await response.json();
       if (data.success) {
+        // Clear notification if it matches
+        if (newOrderNotification && newOrderNotification.id === orderId) {
+          setNewOrderNotification(null);
+        }
+        
+        // Set print order to trigger print receipt
+        setPrintOrder(data.order);
+
         // Broadcast update
         await fetch('/api/broadcast', {
           method: 'POST',
@@ -276,6 +286,11 @@ export default function OrdersManagement() {
 
       const data = await response.json();
       if (data.success) {
+        // Clear notification if it matches
+        if (newOrderNotification && newOrderNotification.id === orderId) {
+          setNewOrderNotification(null);
+        }
+
         // Broadcast update
         await fetch('/api/broadcast', {
           method: 'POST',
@@ -305,6 +320,11 @@ export default function OrdersManagement() {
 
       const data = await response.json();
       if (data.success) {
+        // Clear notification if it matches
+        if (newOrderNotification && newOrderNotification.id === orderId) {
+          setNewOrderNotification(null);
+        }
+
         // Broadcast update
         await fetch('/api/broadcast', {
           method: 'POST',
@@ -443,41 +463,16 @@ export default function OrdersManagement() {
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'pending':
-        return <Hourglass className="w-5 h-5 text-yellow-400" />;
-      case 'accepted':
-      case 'processing':
-        return <Truck className="w-5 h-5 text-indigo-400" />;
-      case 'completed':
-        return <CheckCircle className="w-5 h-5 text-green-400" />;
-      default:
-        return <Clock className="w-5 h-5 text-gray-400" />;
+  const handleMuteOrder = (orderId) => {
+    setMutedOrders(prev => {
+      const newSet = new Set(prev);
+      newSet.add(orderId);
+      return newSet;
+    });
+    // If the notification matches the muted order, close it
+    if (newOrderNotification && newOrderNotification.id === orderId) {
+        setNewOrderNotification(null);
     }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-900 text-yellow-200';
-      case 'accepted':
-      case 'processing':
-        return 'bg-indigo-900 text-indigo-200';
-      case 'completed':
-        return 'bg-green-900 text-green-200';
-      default:
-        return 'bg-gray-700 text-gray-300';
-    }
-  };
-
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = Math.floor((now - date) / 1000 / 60);
-    if (diff < 1) return 'Just now';
-    if (diff < 60) return `${diff} min ago`;
-    return date.toLocaleTimeString();
   };
 
   if (loading) {
@@ -487,8 +482,6 @@ export default function OrdersManagement() {
       </div>
     );
   }
-
-  const currentOrder = editingOrder ? orders.find(o => o.id === editingOrder) : null;
 
   // Filter orders based on selected status
   const filteredOrders = orders.filter(order => {
@@ -504,400 +497,71 @@ export default function OrdersManagement() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 lg:mb-6 gap-2">
-        <h1 className="text-2xl lg:text-3xl font-bold text-white">Orders Management</h1>
-        <div className="text-gray-400 text-xs lg:text-sm">
-          {filteredOrders.length} {statusFilter === 'pending' ? 'pending' : statusFilter === 'processing' ? 'processing' : 'completed'} orders
-        </div>
-      </div>
+      {/* Hidden Print Receipt Component */}
+      <OrderReceipt order={printOrder} />
 
-      {/* Status Filter Buttons */}
-      <div className="mb-4 lg:mb-6 flex flex-wrap gap-2 lg:gap-3">
-        <button
-          onClick={() => setStatusFilter('pending')}
-          className={`px-4 py-2 lg:px-6 lg:py-3 rounded-lg text-sm lg:text-base font-semibold transition-all ${
-            statusFilter === 'pending'
-              ? 'bg-yellow-600 text-white shadow-lg'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          Pending
-        </button>
-        <button
-          onClick={() => setStatusFilter('processing')}
-          className={`px-4 py-2 lg:px-6 lg:py-3 rounded-lg text-sm lg:text-base font-semibold transition-all ${
-            statusFilter === 'processing'
-              ? 'bg-indigo-600 text-white shadow-lg'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          Processing
-        </button>
-        <button
-          onClick={() => setStatusFilter('completed')}
-          className={`px-4 py-2 lg:px-6 lg:py-3 rounded-lg text-sm lg:text-base font-semibold transition-all ${
-            statusFilter === 'completed'
-              ? 'bg-green-600 text-white shadow-lg'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          Completed
-        </button>
-      </div>
-
-      {/* Table Status Overview */}
-      <div className="mb-4 lg:mb-6 bg-gray-800 rounded-xl p-3 lg:p-4 border border-gray-700">
-        <h2 className="text-base lg:text-lg font-semibold text-white mb-2 lg:mb-3">Table Status</h2>
-        <div className="grid grid-cols-5 sm:grid-cols-5 gap-2">
-          {tables.map((table) => (
-            <div
-              key={table.number}
-              className={`p-2 lg:p-3 rounded-lg text-center ${
-                table.status === 'processing'
-                  ? 'bg-indigo-900 text-indigo-200'
-                  : 'bg-gray-700 text-gray-300'
-              }`}
-            >
-              <div className="font-bold text-sm lg:text-base">Table {table.number}</div>
-              <div className="text-xs mt-1">
-                {table.status === 'processing' ? 'Processing' : 'Empty'}
-              </div>
-            </div>
-          ))}
+      <div className="print:hidden">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 lg:mb-6 gap-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-white">Orders Management</h1>
+          <div className="text-gray-400 text-xs lg:text-sm">
+            {filteredOrders.length} {statusFilter === 'pending' ? 'pending' : statusFilter === 'processing' ? 'processing' : 'completed'} orders
+          </div>
         </div>
+
+        {/* Status Filter Buttons */}
+        <StatusFilter 
+          currentFilter={statusFilter} 
+          onFilterChange={setStatusFilter} 
+        />
+
+        {/* Table Status Overview */}
+        <TableStatus tables={tables} />
       </div>
 
       {/* New Order Notification Popup */}
-      {newOrderNotification && (
-        <div className="fixed top-4 left-4 right-4 lg:left-auto lg:right-4 z-50 bg-indigo-600 text-white p-3 lg:p-4 rounded-xl shadow-2xl max-w-sm lg:max-w-sm animate-slide-in">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-2 lg:gap-3">
-              <Bell className="w-5 h-5 lg:w-6 lg:h-6 mt-1 flex-shrink-0" />
-              <div className="min-w-0">
-                <h3 className="font-bold text-base lg:text-lg">New Order!</h3>
-                <p className="text-xs lg:text-sm mt-1 break-words">
-                  Table {newOrderNotification.tableNumber} - Order #{newOrderNotification.id.slice(-4)}
-                  {newOrderNotification.priority && (
-                    <span className={`ml-2 px-2 py-0.5 rounded text-xs ${priorityStyles[newOrderNotification.priority]?.bg || 'bg-gray-700'} ${priorityStyles[newOrderNotification.priority]?.text || 'text-gray-300'}`}>
-                      {newOrderNotification.priority}
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs mt-1 opacity-90">
-                  Total: {Number(newOrderNotification.total).toFixed(2)} BDT
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setNewOrderNotification(null)}
-              className="text-white hover:text-gray-200 flex-shrink-0 ml-2"
-            >
-              <X className="w-4 h-4 lg:w-5 lg:h-5" />
-            </button>
-          </div>
-        </div>
-      )}
+      <OrderNotification 
+        notification={newOrderNotification} 
+        onClose={() => setNewOrderNotification(null)}
+        onMute={handleMuteOrder}
+      />
 
       <div className="space-y-3 lg:space-y-4">
         {filteredOrders.map((order) => (
-          <div
+          <OrderCard
             key={order.id}
-            className="bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-700 hover:border-gray-600 transition"
-          >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-start mb-3 lg:mb-4 gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h3 className="text-lg lg:text-xl font-bold text-white">Order #{order.id.slice(-4)}</h3>
-                  {order.priority && (() => {
-                    const priorityStyle = priorityStyles[order.priority];
-                    const PriorityIcon = priorityStyle?.icon;
-                    return (
-                      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${priorityStyle?.bg || 'bg-gray-700'} ${priorityStyle?.text || 'text-gray-300'}`}>
-                        {PriorityIcon && <PriorityIcon className="w-3 h-3" />}
-                        {order.priority}
-                      </div>
-                    );
-                  })()}
-                </div>
-                <p className="text-gray-400 text-sm lg:text-base">Table: {order.tableNumber}</p>
-                <p className="text-gray-500 text-xs lg:text-sm mt-1">
-                  {formatTime(order.createdAt)}
-                </p>
-              </div>
-              <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${getStatusColor(order.status)}`}>
-                {getStatusIcon(order.status)}
-                <span className="text-xs lg:text-sm font-medium capitalize">{order.status}</span>
-              </div>
-            </div>
-
-            {editingOrder === order.id ? (
-              <div className="space-y-3 lg:space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-2">
-                  <h4 className="text-base lg:text-lg font-semibold text-white">Edit Order Items</h4>
-                  <button
-                    onClick={() => setShowAddItemModal(true)}
-                    className="w-full sm:w-auto px-3 lg:px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Item
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {editFormData.items.map((item, index) => {
-                    const isLaterOrder = item.isLaterOrder;
-                    return (
-                      <div key={index} className={`bg-gray-700 p-3 rounded-lg ${isLaterOrder ? 'border border-yellow-700/50' : ''}`}>
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <p className="text-white font-medium">{item.name}</p>
-                              {isLaterOrder && (
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-600/30 text-yellow-400 font-medium">
-                                  Later Order
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 mt-2">
-                              <button
-                                onClick={() => handleUpdateItemQuantity(index, -1)}
-                                className="p-1 bg-gray-600 rounded hover:bg-gray-500"
-                              >
-                                <Minus className="w-4 h-4 text-white" />
-                              </button>
-                              <span className="text-white font-semibold w-8 text-center">{item.quantity}</span>
-                              <button
-                                onClick={() => handleUpdateItemQuantity(index, 1)}
-                                className="p-1 bg-gray-600 rounded hover:bg-gray-500"
-                              >
-                                <Plus className="w-4 h-4 text-white" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={item.finalPrice || item.price}
-                              onChange={(e) => handleUpdatePrice(index, e.target.value)}
-                              className="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-sm"
-                            />
-                            <button
-                              onClick={() => handleRemoveItem(index)}
-                              className="p-1 bg-red-600 rounded hover:bg-red-500"
-                            >
-                              <Trash2 className="w-4 h-4 text-white" />
-                            </button>
-                          </div>
-                        </div>
-                        {item.extras && item.extras.length > 0 && (
-                          <div className="text-xs text-gray-400 mt-1">
-                            Extras: {item.extras.map(e => `${e.qty}x ${e.name}`).join(', ')}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-3 lg:pt-4 border-t border-gray-700 gap-3">
-                  <div className="text-xl lg:text-2xl font-bold text-green-400">
-                    {Number(editFormData.total).toFixed(2)} BDT
-                  </div>
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <button
-                      onClick={() => {
-                        setEditingOrder(null);
-                        setEditFormData(null);
-                      }}
-                      className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm lg:text-base"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveEdit}
-                      className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base"
-                    >
-                      <Save className="w-4 h-4" />
-                      Save
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="mb-4">
-                  {order.hasLaterOrderItems && (
-                    <div className="mb-3 p-2 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-                      <p className="text-xs text-yellow-400 font-semibold flex items-center gap-1">
-                        <Bell className="w-3 h-3" />
-                        This order contains items from later orders
-                      </p>
-                    </div>
-                  )}
-                  <p className="text-sm text-gray-400 mb-2">Items:</p>
-                  <ul className="space-y-1">
-                    {order.items.map((item, index) => {
-                      const itemPriority = item.priority || 'Medium';
-                      const priorityLabel = itemPriority === 'High' ? 'Fast' : 'Normal';
-                      const isLaterOrder = item.isLaterOrder;
-                      return (
-                        <li key={index} className={`text-gray-300 flex items-center justify-between ${isLaterOrder ? 'bg-yellow-900/20 px-2 py-1 rounded' : ''}`}>
-                          <span className="flex items-center gap-2">
-                            <span>
-                              • {item.quantity}x {item.name} - {Number(item.finalPrice || item.price).toFixed(2)} BDT
-                              {item.extras && item.extras.length > 0 && (
-                                <span className="text-gray-500 text-xs ml-2">
-                                  (+{item.extras.length} extras)
-                                </span>
-                              )}
-                            </span>
-                            {isLaterOrder && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-600/30 text-yellow-400 font-medium">
-                                Later Order
-                              </span>
-                            )}
-                          </span>
-                          <span className={`ml-2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${priorityLabel === 'Fast' ? 'bg-red-500/20 text-red-400' : 'bg-gray-700 text-gray-400'}`}>
-                            {priorityLabel}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-3 lg:pt-4 border-t border-gray-700 gap-3">
-                  <div className="text-xl lg:text-2xl font-bold text-green-400">
-                    {Number(order.total).toFixed(2)} BDT
-                  </div>
-                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    {order.status === 'pending' && (
-                      <>
-                        <button
-                          onClick={() => handleEdit(order)}
-                          className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={() => handleAcceptOrder(order.id)}
-                          className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm lg:text-base"
-                        >
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => handleCancelOrder(order.id)}
-                          className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm lg:text-base"
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    )}
-                    {order.status === 'processing' && (
-                      <button
-                        onClick={() => handleStatusChange(order.id, 'completed')}
-                        className="w-full sm:w-auto px-3 lg:px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm lg:text-base"
-                      >
-                        Completed
-                      </button>
-                    )}
-                    {order.status === 'completed' && (
-                      <button
-                        onClick={() => handleDone(order.id)}
-                        className="w-full sm:w-auto px-3 lg:px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm lg:text-base"
-                      >
-                        Done (Table Empty)
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+            order={order}
+            isEditing={editingOrder === order.id}
+            editFormData={editFormData}
+            onEdit={handleEdit}
+            onCancelEdit={() => {
+              setEditingOrder(null);
+              setEditFormData(null);
+            }}
+            onSaveEdit={handleSaveEdit}
+            onAddItemClick={() => setShowAddItemModal(true)}
+            onUpdateItemQuantity={handleUpdateItemQuantity}
+            onRemoveItem={handleRemoveItem}
+            onUpdatePrice={handleUpdatePrice}
+            onAccept={handleAcceptOrder}
+            onCancel={handleCancelOrder}
+            onStatusChange={handleStatusChange}
+            onDone={handleDone}
+          />
         ))}
 
         {filteredOrders.length === 0 && (
-          <div className="bg-gray-800 rounded-xl p-12 text-center border border-gray-700">
-            <ShoppingBag className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg">
-              {statusFilter === 'pending' 
-                ? 'No pending orders' 
-                : statusFilter === 'processing' 
-                ? 'No orders in processing' 
-                : 'No completed orders'}
-            </p>
-            <p className="text-gray-500 text-sm mt-2">
-              {statusFilter === 'pending' 
-                ? 'New orders will appear here' 
-                : statusFilter === 'processing' 
-                ? 'Orders being prepared will appear here' 
-                : 'Completed orders will appear here'}
-            </p>
-          </div>
+          <OrderListEmptyState statusFilter={statusFilter} />
         )}
       </div>
 
       {/* Add Item Modal */}
-      {showAddItemModal && (
-        <div className="fixed inset-0 z-50 bg-gray-900/95 flex items-center justify-center p-2 lg:p-4" onClick={() => setShowAddItemModal(false)}>
-          <div
-            className="bg-gray-800 w-full max-w-2xl max-h-[95vh] lg:max-h-[90vh] overflow-y-auto rounded-xl lg:rounded-2xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4 lg:p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl lg:text-2xl font-bold text-white">Add Item to Order</h2>
-                <button
-                  onClick={() => setShowAddItemModal(false)}
-                  className="p-2 bg-gray-700 rounded-full hover:bg-gray-600"
-                >
-                  <X className="w-5 h-5 text-white" />
-                </button>
-              </div>
-
-              <div className="space-y-4 lg:space-y-6">
-                {/* Menu Items */}
-                <div>
-                  <h3 className="text-base lg:text-lg font-semibold text-white mb-2 lg:mb-3">Menu Items</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3 max-h-64 overflow-y-auto">
-                    {menuItems.filter(item => item.status === 'Available').map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => handleAddItemToOrder(item, false)}
-                        className="p-2 lg:p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition"
-                      >
-                        <div className="font-medium text-white text-sm lg:text-base">{item.name}</div>
-                        <div className="text-xs lg:text-sm text-green-400 mt-1">
-                          {Number(item.finalPrice || item.price).toFixed(2)} BDT
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Extra Items */}
-                <div>
-                  <h3 className="text-base lg:text-lg font-semibold text-white mb-2 lg:mb-3">Extra Items</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3 max-h-64 overflow-y-auto">
-                    {extraItems.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => handleAddItemToOrder(item, true)}
-                        className="p-2 lg:p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition"
-                      >
-                        <div className="font-medium text-white text-sm lg:text-base">{item.name}</div>
-                        <div className="text-xs lg:text-sm text-green-400 mt-1">
-                          {Number(item.price).toFixed(2)} BDT
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddItemModal
+        isOpen={showAddItemModal}
+        onClose={() => setShowAddItemModal(false)}
+        menuItems={menuItems}
+        extraItems={extraItems}
+        onAddItem={handleAddItemToOrder}
+      />
     </div>
   );
 }
