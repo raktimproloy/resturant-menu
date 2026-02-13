@@ -1,29 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getTodayDateString } from '@/lib/utils';
+import { useAdminNotifications } from '../AdminNotificationContext';
 import OrderReceipt from './components/OrderReceipt';
 import StatusFilter from './components/StatusFilter';
 import TableStatus from './components/TableStatus';
-import OrderNotification from './components/OrderNotification';
 import OrderCard from './components/OrderCard';
 import AddItemModal from './components/AddItemModal';
 import OrderListEmptyState from './components/OrderListEmptyState';
 
 export default function OrdersManagement() {
+  const { clearNewOrder } = useAdminNotifications();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingOrder, setEditingOrder] = useState(null);
   const [editFormData, setEditFormData] = useState(null);
-  const [newOrderNotification, setNewOrderNotification] = useState(null);
   const [tables, setTables] = useState(Array.from({ length: 10 }, (_, i) => ({ number: i + 1, status: 'empty' })));
   const [statusFilter, setStatusFilter] = useState('pending'); // Default to pending
   const [showAddItemModal, setShowAddItemModal] = useState(false);
-  const [mutedOrders, setMutedOrders] = useState(new Set());
   const [menuItems, setMenuItems] = useState([]);
   const [extraItems, setExtraItems] = useState([]);
   
   const [printOrder, setPrintOrder] = useState(null);
+  const [printVariant, setPrintVariant] = useState('processing'); // 'processing' | 'complete'
 
   // Print Logic
   useEffect(() => {
@@ -34,84 +34,7 @@ export default function OrdersManagement() {
     }
   }, [printOrder]);
 
-  // WebSocket connection for real-time updates
-  useEffect(() => {
-    const eventSource = new EventSource('/api/websocket');
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        
-        if (message.type === 'new_order') {
-          // Show popup notification
-          setNewOrderNotification(message.data);
-          
-          // Play notification sound (if permission granted)
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('New Order!', {
-              body: `Table ${message.data.tableNumber} - Order #${message.data.id.slice(-4)}`,
-              icon: '/favicon.ico',
-              tag: message.data.id,
-            });
-          }
-          
-          // Refresh orders
-          fetchOrders();
-        } else if (message.type === 'order_update') {
-          // Refresh orders when updated
-          fetchOrders();
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    };
-    
-    eventSource.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-    
-    return () => {
-      eventSource.close();
-    };
-  }, []);
-
-  // Request notification permission
-  useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }, []);
-
-  useEffect(() => {
-    let interval;
-    const shouldPlay = !!newOrderNotification && !mutedOrders.has(newOrderNotification.id);
-    if (shouldPlay) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      const playBeep = () => {
-        const ctx = new AudioContext();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1046.5, ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.5);
-        setTimeout(() => {
-          ctx.close();
-        }, 600);
-      };
-      playBeep();
-      interval = setInterval(playBeep, 2000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [newOrderNotification, mutedOrders]);
+  const fetchOrdersRef = useRef(() => {});
 
   const fetchOrders = async () => {
     try {
@@ -144,6 +67,19 @@ export default function OrdersManagement() {
     });
     setTables(newTables);
   };
+
+  fetchOrdersRef.current = fetchOrders;
+
+  // Listen for global order updates (from AdminNotificationContext WebSocket)
+  useEffect(() => {
+    const onUpdate = () => fetchOrdersRef.current?.();
+    window.addEventListener('owner-order-update', onUpdate);
+    window.addEventListener('owner-new-order', onUpdate);
+    return () => {
+      window.removeEventListener('owner-order-update', onUpdate);
+      window.removeEventListener('owner-new-order', onUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     fetchOrders();
@@ -196,12 +132,9 @@ export default function OrdersManagement() {
 
       const data = await response.json();
       if (data.success) {
-        // Clear notification if it matches
-        if (newOrderNotification && newOrderNotification.id === editingOrder) {
-          setNewOrderNotification(null);
-        }
-
-        // Show print dialog
+        clearNewOrder(editingOrder);
+        // Show print dialog (processing receipt)
+        setPrintVariant('processing');
         setPrintOrder(data.order);
 
         // Broadcast update
@@ -244,12 +177,9 @@ export default function OrdersManagement() {
 
       const data = await response.json();
       if (data.success) {
-        // Clear notification if it matches
-        if (newOrderNotification && newOrderNotification.id === orderId) {
-          setNewOrderNotification(null);
-        }
-        
-        // Set print order to trigger print receipt
+        clearNewOrder(orderId);
+        // Set print order to trigger print receipt (kitchen/processing)
+        setPrintVariant('processing');
         setPrintOrder(data.order);
 
         // Broadcast update
@@ -286,9 +216,11 @@ export default function OrdersManagement() {
 
       const data = await response.json();
       if (data.success) {
-        // Clear notification if it matches
-        if (newOrderNotification && newOrderNotification.id === orderId) {
-          setNewOrderNotification(null);
+        clearNewOrder(orderId);
+        // When marking complete, trigger customer copy print (same style as processing)
+        if (newStatus === 'completed') {
+          setPrintVariant('complete');
+          setPrintOrder(data.order);
         }
 
         // Broadcast update
@@ -463,18 +395,6 @@ export default function OrdersManagement() {
     }
   };
 
-  const handleMuteOrder = (orderId) => {
-    setMutedOrders(prev => {
-      const newSet = new Set(prev);
-      newSet.add(orderId);
-      return newSet;
-    });
-    // If the notification matches the muted order, close it
-    if (newOrderNotification && newOrderNotification.id === orderId) {
-        setNewOrderNotification(null);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -495,15 +415,19 @@ export default function OrdersManagement() {
     return true;
   });
 
+  const completedTotalAmount = statusFilter === 'completed'
+    ? filteredOrders.reduce((sum, o) => sum + Number(o.total || 0), 0)
+    : 0;
+
   return (
     <div>
       {/* Hidden Print Receipt Component */}
-      <OrderReceipt order={printOrder} />
+      <OrderReceipt order={printOrder} variant={printVariant} />
 
       <div className="print:hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 lg:mb-6 gap-2">
-          <h1 className="text-2xl lg:text-3xl font-bold text-white">Orders Management</h1>
-          <div className="text-gray-400 text-xs lg:text-sm">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Orders Management</h1>
+          <div className="text-gray-400 text-xs sm:text-sm">
             {filteredOrders.length} {statusFilter === 'pending' ? 'pending' : statusFilter === 'processing' ? 'processing' : 'completed'} orders
           </div>
         </div>
@@ -516,14 +440,18 @@ export default function OrdersManagement() {
 
         {/* Table Status Overview */}
         <TableStatus tables={tables} />
-      </div>
 
-      {/* New Order Notification Popup */}
-      <OrderNotification 
-        notification={newOrderNotification} 
-        onClose={() => setNewOrderNotification(null)}
-        onMute={handleMuteOrder}
-      />
+        {/* Completed section: total amount */}
+        {statusFilter === 'completed' && filteredOrders.length > 0 && (
+          <div className="mb-4 p-4 bg-gray-800 rounded-xl border border-gray-700">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-gray-400 text-sm sm:text-base">Total completed amount</span>
+              <span className="text-xl sm:text-2xl font-bold text-green-400">{completedTotalAmount.toLocaleString()} ৳</span>
+            </div>
+            <p className="text-gray-500 text-xs mt-1">{filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''} completed</p>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-3 lg:space-y-4">
         {filteredOrders.map((order) => (

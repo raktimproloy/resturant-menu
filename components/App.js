@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ChefHat, Search, Utensils, Clock, DollarSign, X, ShoppingCart, Minus, Plus, ListOrdered, ChevronUp, ChevronDown, CheckCircle, Hourglass, Truck } from 'lucide-react';
+import { ChefHat, Search, Utensils, Clock, DollarSign, X, ShoppingCart, Minus, Plus, ListOrdered, ChevronUp, ChevronDown, CheckCircle, ConciergeBell, CookingPot, Droplets } from 'lucide-react';
 
 import Header from './Header';
 import MenuCard from './MenuCard';
@@ -11,6 +11,7 @@ import UserEditOrderModal from './UserEditOrderModal';
 import OrderConfirmationModal from './OrderConfirmationModal';
 import CategorySelector from './CategorySelector';
 import SearchBar from './SearchBar';
+import NotificationPanel from './NotificationPanel';
 
 const MENU_DATA_PATH = '/api/menu';
 const EXTRAS_DATA_PATH = '/api/extras';
@@ -23,12 +24,12 @@ const priorityStyles = {
 };
 
 const statusStyles = {
-    'Pending': { icon: Hourglass, text: 'text-yellow-400', bg: 'bg-yellow-900', label: 'Pending' },
-    'In Progress': { icon: Truck, text: 'text-indigo-400', bg: 'bg-indigo-900', label: 'In Progress' },
+    'Pending': { icon: ConciergeBell, text: 'text-yellow-400', bg: 'bg-yellow-900', label: 'Pending' },
+    'In Progress': { icon: CookingPot, text: 'text-indigo-400', bg: 'bg-indigo-900', label: 'In Progress' },
     'Ready for Pickup': { icon: CheckCircle, text: 'text-green-400', bg: 'bg-green-900', label: 'Ready' },
 };
 
-const RestaurantName = "The Midnight Kitchen";
+const RestaurantName = "FamDine";
 
 /**
  * Main Application Component
@@ -54,8 +55,14 @@ const App = ({ tableNumber: propTableNumber }) => {
   const [toastMessage, setToastMessage] = useState(null);
   const [isOrderSuccessModalOpen, setIsOrderSuccessModalOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [notifications, setNotifications] = useState([]); // Stored notifications (waiter, order status, etc.)
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
 
   const [orderStatus, setOrderStatus] = useState({}); // Track order status updates
+
+  const addNotification = useCallback((type, body) => {
+    setNotifications(prev => [...prev, { id: `n-${Date.now()}-${Math.random().toString(36).slice(2)}`, type, body, time: new Date().toISOString() }]);
+  }, []);
 
   // Update table number if prop changes
   useEffect(() => {
@@ -82,19 +89,22 @@ const App = ({ tableNumber: propTableNumber }) => {
         // Filter orders for this table and exclude cancelled and completed (desk emptied)
         const userOrders = data.orders
           .filter(order => order.tableNumber === tableNumber && order.status !== 'cancelled' && order.status !== 'completed')
-          .map(order => ({
-            orderId: order.id,
-            items: order.items || [],
-            total: order.total || 0,
-            orderPriority: order.priority || 'Medium',
-            status: order.status === 'pending' ? 'Pending' : 
-                   order.status === 'accepted' || order.status === 'processing' ? 'In Progress' : 
-                   order.status === 'completed' ? 'Ready for Pickup' : 'Pending',
-            timeAdded: new Date(order.createdAt).getTime(),
-            timeRemaining: 0, // Will be calculated if needed
-            estimatedTotalTime: 0,
-            tableNumber: order.tableNumber,
-          }));
+          .map(order => {
+            const prepMins = order.totalPrepTime ?? 15;
+            return {
+              orderId: order.id,
+              items: order.items || [],
+              total: order.total || 0,
+              orderPriority: order.priority || 'Medium',
+              status: order.status === 'pending' ? 'Pending' : 
+                     order.status === 'accepted' || order.status === 'processing' ? 'In Progress' : 
+                     order.status === 'completed' ? 'Ready for Pickup' : 'Pending',
+              timeAdded: new Date(order.createdAt).getTime(),
+              acceptedAt: order.acceptedAt ? new Date(order.acceptedAt).getTime() : null, // when status changed to in progress (stored on server)
+              estimatedTotalTimeSec: prepMins * 60,
+              tableNumber: order.tableNumber,
+            };
+          });
         
         setQueue(userOrders);
       }
@@ -137,8 +147,9 @@ const App = ({ tableNumber: propTableNumber }) => {
             setQueue(prevQueue => {
               const existingIndex = prevQueue.findIndex(q => q.orderId === order.id);
               
-              // Remove cancelled or completed orders (desk emptied)
+              // Remove cancelled or completed orders (desk emptied); clear notifications when order completed
               if (order.status === 'cancelled' || order.status === 'completed') {
+                if (order.status === 'completed') setNotifications([]);
                 return prevQueue.filter(q => q.orderId !== order.id);
               }
               
@@ -149,15 +160,15 @@ const App = ({ tableNumber: propTableNumber }) => {
                 completed: 'Ready for Pickup',
               };
               
+              const prepMins = order.totalPrepTime ?? 15;
+              const acceptedAt = order.acceptedAt ? new Date(order.acceptedAt).getTime() : null;
               if (existingIndex >= 0) {
-                // Update existing order
                 return prevQueue.map((q, idx) => 
                   idx === existingIndex
-                    ? { ...q, status: statusMap[order.status] || q.status }
+                    ? { ...q, status: statusMap[order.status] || q.status, estimatedTotalTimeSec: prepMins * 60, acceptedAt: acceptedAt ?? q.acceptedAt }
                     : q
                 );
               } else {
-                // Add new order if it's for this table
                 return [...prevQueue, {
                   orderId: order.id,
                   items: order.items || [],
@@ -165,8 +176,8 @@ const App = ({ tableNumber: propTableNumber }) => {
                   orderPriority: order.priority || 'Medium',
                   status: statusMap[order.status] || 'Pending',
                   timeAdded: new Date(order.createdAt).getTime(),
-                  timeRemaining: 0,
-                  estimatedTotalTime: 0,
+                  acceptedAt,
+                  estimatedTotalTimeSec: prepMins * 60,
                   tableNumber: order.tableNumber,
                 }];
               }
@@ -188,12 +199,27 @@ const App = ({ tableNumber: propTableNumber }) => {
             }
             
             setToastMessage(`Order #${order.id.slice(-4)}: ${order.status}`);
+            (() => {
+              const formatElapsed = (sec) => { const s = Math.max(0, Math.floor(sec)); const m = Math.floor(s / 60); return `${m}:${(s % 60).toString().padStart(2, '0')}`; };
+              const now = Date.now();
+              const created = new Date(order.createdAt).getTime();
+              const accepted = order.acceptedAt ? new Date(order.acceptedAt).getTime() : null;
+              let timeLabel = '';
+              if (order.status === 'pending') timeLabel = `${formatElapsed((now - created) / 1000)} in queue`;
+              else if (order.status === 'accepted' || order.status === 'processing') timeLabel = `${formatElapsed((now - (accepted || created)) / 1000)} in progress`;
+              else timeLabel = order.status;
+              const statusLabel = order.status === 'pending' ? 'Pending' : order.status === 'accepted' || order.status === 'processing' ? 'In Progress' : order.status;
+              addNotification('order_update', `Order #${order.id.slice(-4)}: ${statusLabel} — ${timeLabel}`);
+            })();
           }
         } else if (message.type === 'new_order') {
           // Refresh orders when new order is created
           if (message.data.tableNumber === tableNumber) {
             fetchUserOrders();
           }
+        } else if (message.type === 'water_coming' && message.data?.tableNumber === tableNumber) {
+          setToastMessage('Water is on the way!');
+          addNotification('water_coming', 'Water is on the way.');
         } else if (message.type === 'heartbeat') {
           // Keep connection alive
         }
@@ -213,7 +239,7 @@ const App = ({ tableNumber: propTableNumber }) => {
     return () => {
       eventSource.close();
     };
-  }, [tableNumber, fetchUserOrders]);
+  }, [tableNumber, fetchUserOrders, addNotification]);
 
   useEffect(() => {
     const loadMenuData = async () => {
@@ -278,48 +304,53 @@ const App = ({ tableNumber: propTableNumber }) => {
     }
   }, [menuCategories, selectedCategory]);
 
+  const extraItemsAsMenuShape = useMemo(() => extraItems.map(extra => ({
+    id: `extra-${extra.id}`,
+    name: extra.name,
+    price: Number(extra.price) || 0,
+    finalPrice: Number(extra.price) || 0,
+    status: 'Available',
+    images: extra.images || [],
+    time: 0,
+    categoryIds: [],
+    tag: null,
+    mainItems: [],
+    uses: '',
+    extraItemIds: [],
+    discount: null,
+    isExtra: true,
+  })), [extraItems]);
+
   const filteredMenu = useMemo(() => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    const hasSearch = q.length > 0;
+
+    // When searching: search across ALL menu items and ALL extras, show combined results
+    if (hasSearch) {
+      const matchingMenu = menuItems.filter(item =>
+        item.name.toLowerCase().includes(q)
+      );
+      const matchingExtras = extraItemsAsMenuShape.filter(item =>
+        item.name.toLowerCase().includes(q)
+      );
+      const combined = [...matchingMenu, ...matchingExtras];
+      return combined.sort((a, b) => (b.status === 'Available' ? 1 : 0) - (a.status === 'Available' ? 1 : 0));
+    }
+
+    // No search: category-based filter
     let items = [];
-    
-    // If "Other" category is selected, only show extra items (no regular menu items)
     if (selectedCategory === 'Other') {
-      // Transform extra items to match menu item structure
-      const extraItemsAsMenu = extraItems.map(extra => ({
-        id: `extra-${extra.id}`, // Prefix to avoid conflicts
-        name: extra.name,
-        price: Number(extra.price) || 0,
-        finalPrice: Number(extra.price) || 0,
-        status: 'Available',
-        images: extra.images || [],
-        time: 0, // Extras are typically instant
-        categoryIds: [],
-        tag: null,
-        mainItems: [],
-        uses: '',
-        extraItemIds: [],
-        discount: null,
-        isExtra: true, // Flag to identify this is an extra item
-      }));
-      items = extraItemsAsMenu;
+      items = [...extraItemsAsMenuShape];
     } else if (selectedCategory === 'all') {
-      // Show all menu items when "all" is selected
       items = [...menuItems];
     } else {
-      // Filter menu items by selected category
       const selectedCat = categories.find(cat => cat.label === selectedCategory);
       if (selectedCat) {
         items = menuItems.filter(item => item.categoryIds && item.categoryIds.includes(selectedCat.id));
       }
     }
-    
-    if (searchQuery) {
-      const lowerCaseQuery = searchQuery.toLowerCase();
-      items = items.filter(item =>
-        item.name.toLowerCase().includes(lowerCaseQuery)
-      );
-    }
-    return items.sort((a, b) => b.status === 'Available' ? -1 : 1); // Sort available items first
-  }, [menuItems, selectedCategory, searchQuery, categories, extraItems]);
+    return items.sort((a, b) => (b.status === 'Available' ? 1 : 0) - (a.status === 'Available' ? 1 : 0));
+  }, [menuItems, selectedCategory, searchQuery, categories, extraItemsAsMenuShape]);
 
   // Cart logic
   const cartTotal = useMemo(() => {
@@ -436,6 +467,34 @@ const App = ({ tableNumber: propTableNumber }) => {
     }));
   }, []);
 
+  const handleAddExtraToCartItem = useCallback((cartId, extra) => {
+    setCart(prevCart => prevCart.map(item => {
+      if (item.cartId !== cartId || item.isExtra) return item;
+      const existing = item.extras?.find(e => e.id === extra.id) || null;
+      const newExtras = existing
+        ? item.extras.map(e => e.id === extra.id ? { ...e, qty: e.qty + 1 } : e)
+        : [...(item.extras || []), { id: extra.id, name: extra.name, price: extra.price, qty: 1 }];
+      const itemPrice = item.finalPrice !== undefined ? item.finalPrice : item.price;
+      const extrasCost = newExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
+      return { ...item, extras: newExtras, totalPrice: itemPrice * item.quantity + extrasCost };
+    }));
+  }, []);
+
+  const handleUpdateExtraQuantity = useCallback((cartId, extraId, delta) => {
+    setCart(prevCart => prevCart.map(item => {
+      if (item.cartId !== cartId || !item.extras?.length) return item;
+      const extra = item.extras.find(e => e.id === extraId);
+      if (!extra) return item;
+      const newQty = extra.qty + delta;
+      const newExtras = newQty <= 0
+        ? item.extras.filter(e => e.id !== extraId)
+        : item.extras.map(e => e.id === extraId ? { ...e, qty: newQty } : e);
+      const itemPrice = item.finalPrice !== undefined ? item.finalPrice : item.price;
+      const extrasCost = newExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
+      return { ...item, extras: newExtras, totalPrice: itemPrice * item.quantity + extrasCost };
+    }));
+  }, []);
+
   // 4. Refactored handlePlaceOrder to create order via API
   const handlePlaceOrder = useCallback(async () => {
     if (!tableNumber) {
@@ -470,6 +529,7 @@ const App = ({ tableNumber: propTableNumber }) => {
         })),
         total: cartTotal,
         priority: highestPriorityLabel,
+        totalPrepTime: totalPrepTime || 15, // minutes for queue countdown (persisted, no reset on reload)
         customerInfo: {},
         notes: '',
       };
@@ -510,6 +570,7 @@ const App = ({ tableNumber: propTableNumber }) => {
         
         setCart([]); // Clear cart after placing order
         setToastMessage(`Order #${result.order.id.slice(-4)} placed! Added to queue.`);
+        addNotification('order_placed', `Order #${result.order.id.slice(-4)} placed. Added to queue.`);
         setIsOrderSuccessModalOpen(true);
       } else {
         alert(result.error || 'Failed to place order');
@@ -518,7 +579,7 @@ const App = ({ tableNumber: propTableNumber }) => {
       console.error('Error placing order:', error);
       alert('An error occurred while placing your order');
     }
-  }, [cart, cartTotal, tableNumber, fetchUserOrders]);
+  }, [cart, cartTotal, tableNumber, fetchUserOrders, addNotification]);
 
   const handleFinishOrder = useCallback(async (orderId) => {
     try {
@@ -605,6 +666,21 @@ const App = ({ tableNumber: propTableNumber }) => {
     }
   }, [fetchUserOrders]);
 
+  const handleCallWater = useCallback(async () => {
+    if (!tableNumber) return;
+    try {
+      await fetch('/api/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'call_waiter', data: { tableNumber } }),
+      });
+      setToastMessage('Calling for water...');
+      addNotification('call_waiter', 'You called for water.');
+    } catch (e) {
+      setToastMessage('Request failed. Try again.');
+    }
+  }, [tableNumber, addNotification]);
+
   // --- Helper Effects ---
 
   // Manage Toast messages
@@ -627,8 +703,12 @@ const App = ({ tableNumber: propTableNumber }) => {
     <div className="min-h-screen bg-gray-900 text-white font-sans antialiased pb-30">
       <div className="max-w-4xl mx-auto p-4 sm:p-6 pb-20"> {/* pb-20 for fixed bottom navigation */}
         
-        {/* 1 & 2: Header (Restaurant Name, Menu Text, Icon) */}
-        <Header restaurantName={RestaurantName} />
+        {/* 1 & 2: Header — "Fam" + notification icon */}
+        <Header
+          title="Fam"
+          onNotificationClick={() => setNotificationPanelOpen(true)}
+          notificationCount={notifications.length}
+        />
 
         {/* 3: Search Bar */}
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -656,24 +736,51 @@ const App = ({ tableNumber: propTableNumber }) => {
             <p className="text-sm text-gray-500">Please wait a moment.</p>
           </div>
         ) : filteredMenu.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6">
-            {filteredMenu.map((item) => (
-              <MenuCard 
-                key={item.id} 
-                item={item} 
-                onShowDetails={handleShowDetails} // Card body click
-                onAddToCartDirectly={handleDirectAddToCart} // Plus button click
-              />
-            ))}
-          </div>
+          <>
+            {searchQuery.trim() && (
+              <div className="mb-4 text-center sm:text-left">
+                <p className="text-sm text-gray-400">
+                  Search results for <span className="text-indigo-300 font-medium">&quot;{searchQuery.trim()}&quot;</span>
+                  {' '}({filteredMenu.length} {filteredMenu.length === 1 ? 'item' : 'items'})
+                </p>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 w-full min-w-0">
+              {filteredMenu.map((item) => (
+                <div key={item.id} className="min-w-0 w-full">
+                  <MenuCard 
+                    item={item} 
+                    onShowDetails={handleShowDetails}
+                    onAddToCartDirectly={handleDirectAddToCart}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="text-center py-12 bg-gray-800 rounded-xl text-gray-400">
             <Utensils className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-            <p className="text-lg font-medium">No dishes found.</p>
-            <p className="text-sm">Try adjusting your category or search term.</p>
+            <p className="text-lg font-medium">
+              {searchQuery.trim() ? 'No items match your search.' : 'No dishes found.'}
+            </p>
+            <p className="text-sm">
+              {searchQuery.trim() ? 'Try a different search term.' : 'Try adjusting your category or search term.'}
+            </p>
           </div>
         )}
       </div>
+
+      {/* Call for water — fixed bottom */}
+      {tableNumber && (
+        <button
+          type="button"
+          onClick={handleCallWater}
+          className="fixed bottom-20 right-4 sm:right-6 z-20 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-400 text-white shadow-lg shadow-black/30 flex items-center justify-center transition"
+          aria-label="Call for water"
+        >
+          <Droplets className="w-7 h-7" />
+        </button>
+      )}
 
       {/* 3. Fixed Bottom Navigation (with Queue button) */}
       <footer className="fixed bottom-0 left-0 right-0 max-w-4xl mx-auto bg-gray-800 border-t border-gray-700 shadow-2xl p-3 z-10 rounded-t-2xl">
@@ -730,9 +837,13 @@ const App = ({ tableNumber: propTableNumber }) => {
             cart={cart}
             total={cartTotal}
             priorityStyles={priorityStyles}
+            menuItems={menuItems}
+            extraItems={extraItems}
             onRemoveItem={handleRemoveCartItem}
             onUpdateItemQuantity={handleUpdateCartItemQuantity}
             onUpdateItemPriority={handleUpdateCartItemPriority}
+            onAddExtraToCartItem={handleAddExtraToCartItem}
+            onUpdateExtraQuantity={handleUpdateExtraQuantity}
             onClose={() => setIsOrderModalOpen(false)}
             onConfirm={handlePlaceOrder}
             tableNumber={tableNumber}
@@ -751,9 +862,18 @@ const App = ({ tableNumber: propTableNumber }) => {
           />
         )}
 
+      {/* Notification panel (waiter, order status, etc.) */}
+      <NotificationPanel
+        notifications={notifications}
+        isOpen={notificationPanelOpen}
+        onClose={() => setNotificationPanelOpen(false)}
+      />
+
       {/* User Edit Order Modal */}
         <UserEditOrderModal 
           order={editingOrder}
+          menuItems={menuItems}
+          extraItems={extraItems}
           isOpen={isUserEditModalOpen}
           onClose={() => {
             setIsUserEditModalOpen(false);
@@ -762,17 +882,27 @@ const App = ({ tableNumber: propTableNumber }) => {
           onSave={handleSaveEditedOrder}
         />
 
-        {/* Toast Message for quick adds */}
+        {/* Toast — top, professional */}
       {toastMessage && (
-        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 p-3 bg-green-500 text-gray-900 rounded-xl shadow-2xl font-semibold transition-all duration-300">
-            {toastMessage}
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md transition-all duration-300">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-800/95 backdrop-blur-sm border border-gray-600/80 text-white shadow-xl shadow-black/40">
+            <div className="flex-shrink-0 w-9 h-9 rounded-full bg-green-500/20 flex items-center justify-center ring-2 ring-green-500/30">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+            </div>
+            <p className="text-sm font-medium text-gray-100 flex-1 min-w-0">{toastMessage}</p>
+          </div>
         </div>
       )}
 
-      {/* Order Success Toast/Modal */}
+      {/* Order Success Toast — top, professional */}
       {isOrderSuccessModalOpen && (
-        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-indigo-600 text-white rounded-xl shadow-2xl font-semibold">
-            🎉 Order Placed Successfully! Processing Now...
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md transition-all duration-300">
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-800/95 backdrop-blur-sm border border-indigo-500/50 text-white shadow-xl shadow-black/40">
+            <div className="flex-shrink-0 w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center ring-2 ring-indigo-500/30">
+              <CheckCircle className="w-5 h-5 text-indigo-400" />
+            </div>
+            <p className="text-sm font-medium text-gray-100">Order placed successfully. Processing now.</p>
+          </div>
         </div>
       )}
 

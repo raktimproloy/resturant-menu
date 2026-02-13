@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, CheckCircle, Hourglass, Truck, ListOrdered, ChevronUp, ChevronDown } from 'lucide-react';
+import { Clock, CheckCircle, ConciergeBell, CookingPot, ListOrdered, ChevronUp, ChevronDown } from 'lucide-react';
 
 export const priorityStyles = {
   Low: { text: 'text-yellow-400', bg: 'bg-yellow-400/20', icon: ChevronDown },
@@ -10,10 +10,10 @@ export const priorityStyles = {
 export const getStatusIcon = (status) => {
   switch (status) {
     case 'pending':
-      return <Hourglass className="w-5 h-5 text-yellow-400" />;
+      return <ConciergeBell className="w-5 h-5 text-yellow-400" />;
     case 'accepted':
     case 'processing':
-      return <Truck className="w-5 h-5 text-indigo-400" />;
+      return <CookingPot className="w-5 h-5 text-indigo-400" />;
     case 'completed':
       return <CheckCircle className="w-5 h-5 text-green-400" />;
     default:
@@ -42,4 +42,23 @@ export const formatTime = (timestamp) => {
   if (diff < 1) return 'Just now';
   if (diff < 60) return `${diff} min ago`;
   return date.toLocaleTimeString();
+};
+
+/** Elapsed time as M:SS for queue/processing timer */
+export const formatElapsedTimer = (seconds) => {
+  const sec = Math.max(0, Math.floor(seconds));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
+
+/** Format seconds as "X min Y sec" for stored queue/processing time */
+export const formatDuration = (seconds) => {
+  if (seconds == null || seconds < 0) return '—';
+  const sec = Math.floor(Number(seconds));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  if (m === 0) return `${s} sec`;
+  if (s === 0) return `${m} min`;
+  return `${m} min ${s} sec`;
 };

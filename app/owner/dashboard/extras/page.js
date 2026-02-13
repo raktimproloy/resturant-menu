@@ -146,40 +146,40 @@ export default function ExtrasManagement() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 lg:mb-6 gap-3">
-        <h1 className="text-2xl lg:text-3xl font-bold text-white">Extras Management</h1>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Extras Management</h1>
         <button
           onClick={() => {
             resetForm();
             setShowModal(true);
           }}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition text-sm lg:text-base"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg transition text-sm lg:text-base min-h-[44px] sm:min-h-0 touch-manipulation"
         >
-          <Plus className="w-4 h-4 lg:w-5 lg:h-5" />
+          <Plus className="w-4 h-4 lg:w-5 lg:h-5 shrink-0" />
           Add Extra Item
         </button>
       </div>
 
-      <div className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
+      <div className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 -mx-1 sm:mx-0">
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="w-full min-w-[520px] sm:min-w-0">
             <thead className="bg-gray-700">
               <tr>
-                <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Image
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden sm:table-cell">
                   ID
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden md:table-cell">
                   Category
                 </th>
-                <th className="px-3 lg:px-6 py-2 lg:py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -189,38 +189,40 @@ export default function ExtrasManagement() {
                 const primaryImage = item.images?.[0] || `https://placehold.co/60x60/475569/f1f5f9?text=${item.name.split(' ')[0]}`;
                 return (
                 <tr key={item.id} className="hover:bg-gray-750">
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
+                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
                     <img
                       src={primaryImage}
                       alt={item.name}
                       className="w-10 h-10 lg:w-12 lg:h-12 object-cover rounded-lg"
                     />
                   </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-white font-medium text-sm lg:text-base">
+                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-white font-medium text-sm lg:text-base hidden sm:table-cell max-w-[80px] truncate">
                     {item.id}
                   </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-gray-300 text-sm lg:text-base">
+                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 text-gray-300 text-sm lg:text-base max-w-[100px] sm:max-w-none truncate sm:whitespace-nowrap">
                     {item.name}
                   </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-green-400 font-semibold text-sm lg:text-base">
-                    {Number(item.price).toFixed(2)} BDT
+                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-green-400 font-semibold text-sm lg:text-base">
+                    {Number(item.price)} ৳
                   </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-gray-300 text-xs lg:text-sm">
+                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-gray-300 text-xs lg:text-sm hidden md:table-cell">
                     {item.categoryLabel}
                   </td>
-                  <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end gap-2">
+                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right">
+                    <div className="flex justify-end gap-1 sm:gap-2">
                       <button
                         onClick={() => handleEdit(item)}
-                        className="text-indigo-400 hover:text-indigo-300"
+                        className="p-2 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:p-1 flex items-center justify-center text-indigo-400 hover:text-indigo-300 touch-manipulation rounded-lg hover:bg-gray-700/50"
+                        aria-label="Edit"
                       >
-                        <Edit className="w-4 h-4 lg:w-5 lg:h-5" />
+                        <Edit className="w-5 h-5 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="text-red-400 hover:text-red-300"
+                        className="p-2 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:p-1 flex items-center justify-center text-red-400 hover:text-red-300 touch-manipulation rounded-lg hover:bg-gray-700/50"
+                        aria-label="Delete"
                       >
-                        <Trash2 className="w-4 h-4 lg:w-5 lg:h-5" />
+                        <Trash2 className="w-5 h-5 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
                       </button>
                     </div>
                   </td>
@@ -234,11 +236,11 @@ export default function ExtrasManagement() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-2 lg:p-4">
-          <div className="bg-gray-800 rounded-xl w-full max-w-md border border-gray-700 max-h-[95vh] lg:max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-xl w-full max-w-md border border-gray-700 border-b-0 sm:border-b max-h-[95dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
             <div className="p-4 lg:p-6">
-              <div className="flex justify-between items-center mb-4 lg:mb-6">
-                <h2 className="text-xl lg:text-2xl font-bold text-white">
+              <div className="flex justify-between items-center mb-4 lg:mb-6 gap-2">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">
                   {editingItem ? 'Edit Extra Item' : 'Add Extra Item'}
                 </h2>
                 <button
@@ -246,7 +248,8 @@ export default function ExtrasManagement() {
                     setShowModal(false);
                     resetForm();
                   }}
-                  className="text-gray-400 hover:text-white"
+                  className="shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white rounded-lg active:bg-gray-700 touch-manipulation"
+                  aria-label="Close"
                 >
                   <X className="w-5 h-5 lg:w-6 lg:h-6" />
                 </button>

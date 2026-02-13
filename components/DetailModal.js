@@ -1,5 +1,6 @@
 import { Clock, X, Minus, Plus, Tag } from 'lucide-react';
 import React, { useState, useMemo, useEffect } from 'react';
+import BaseModal from './BaseModal';
 
 const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart }) => {
   const [quantity, setQuantity] = useState(1);
@@ -108,29 +109,25 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
   }, [finalPrice, quantity]);
 
   const handleAddToCart = () => {
-    // Add all selected main items to cart
-    selectedMainItems.forEach(mainEntry => {
+    const extrasForMain = selectedExtras.map(extra => ({
+      id: extra.id,
+      name: extra.name,
+      price: extra.price,
+      qty: extra.qty,
+    }));
+    const extrasCost = selectedExtras.reduce((sum, extra) => sum + extra.price * extra.qty, 0);
+
+    selectedMainItems.forEach((mainEntry, index) => {
+      const isFirst = index === 0;
+      const attachedExtras = isFirst ? extrasForMain : [];
+      const mainTotal = finalPrice * mainEntry.quantity + (isFirst ? extrasCost : 0);
       const cartItem = {
         ...mainEntry.item,
         quantity: mainEntry.quantity,
-        extras: [], // Main items don't have extras attached
-        totalPrice: finalPrice * mainEntry.quantity,
+        extras: attachedExtras,
+        totalPrice: mainTotal,
         priority: mainEntry.priority,
         cartId: Date.now() + Math.random(),
-      };
-      onAddToCart(cartItem);
-    });
-
-    // Add all selected extras as separate cart items
-    selectedExtras.forEach(extra => {
-      const cartItem = {
-        ...extra,
-        quantity: extra.qty,
-        extras: [],
-        totalPrice: extra.price * extra.qty,
-        priority: selectedPriority,
-        cartId: Date.now() + Math.random(),
-        isExtra: true, // Explicitly mark as extra item
       };
       onAddToCart(cartItem);
     });
@@ -141,17 +138,13 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
   const priorities = ['Low', 'Medium', 'High'];
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-900/95 flex items-end justify-center sm:items-center p-0" onClick={onClose}>
-      <div
-        className="bg-gray-800 w-full max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl shadow-2xl transform transition-all duration-300 ease-in-out"
-        onClick={(e) => e.stopPropagation()} // Prevent click from closing modal
-      >
-        {/* Header and Image */}
-        <div className="relative">
+    <BaseModal isOpen={!!item} onClose={onClose} maxWidth="lg" slideFromBottom>
+      {/* Header and Main Image */}
+      <div className="relative shrink-0">
           <img
             src={activeImage}
             alt={item.name}
-            className="w-full h-56 object-cover rounded-t-3xl sm:rounded-t-2xl"
+            className="w-full h-48 sm:h-56 object-cover rounded-t-2xl"
             onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = fallbackImage;
@@ -159,227 +152,242 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
           />
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 p-2 bg-gray-900/70 text-white rounded-full hover:bg-gray-700 transition"
+            className="absolute top-3 right-3 p-2 bg-black/50 backdrop-blur-sm text-white rounded-full hover:bg-black/70 transition"
             aria-label="Close details"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
+
+        {/* Thumbnail strip: horizontal scroll, left to right */}
         {item.images?.length > 1 && (
-          <div className="flex gap-3 px-5 sm:px-6 pt-4 overflow-x-auto scrollbar-hide">
-            {item.images.map((image, index) => (
-              <button
-                key={image}
-                onClick={() => setActiveImageIndex(index)}
-                className={`relative rounded-xl overflow-hidden border-2 transition ${index === activeImageIndex ? 'border-indigo-400' : 'border-transparent opacity-70 hover:opacity-100'}`}
-                aria-label={`Show image ${index + 1}`}
-              >
-                <img
-                  src={image}
-                  alt={`${item.name} view ${index + 1}`}
-                  className="h-16 w-16 object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = fallbackImage;
-                  }}
-                />
-              </button>
-            ))}
+          <div className="shrink-0 px-4 sm:px-6 pt-3 pb-1">
+            <div className="flex gap-2 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 -mx-1" style={{ scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>
+              {item.images.map((image, index) => (
+                <button
+                  key={image}
+                  onClick={() => setActiveImageIndex(index)}
+                  className={`shrink-0 relative rounded-lg overflow-hidden border-2 transition-all duration-200 ${index === activeImageIndex ? 'border-indigo-400 ring-2 ring-indigo-400/30 scale-[1.02]' : 'border-gray-600 opacity-80 hover:opacity-100 hover:border-gray-500'}`}
+                  aria-label={`Show image ${index + 1}`}
+                >
+                  <img
+                    src={image}
+                    alt={`${item.name} view ${index + 1}`}
+                    className="h-14 w-14 sm:h-16 sm:w-16 object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = fallbackImage;
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="p-5 sm:p-6">
-          <h2 className="text-3xl font-extrabold text-white mb-2">{item.name}</h2>
-          
-          {/* Main Details */}
-          <div className="flex justify-between items-center text-lg mb-4 border-b border-gray-700 pb-4">
-            <div className="flex flex-col">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col">
+          <div className="p-4 sm:p-6 pb-8 sm:pb-10">
+          {/* Product title */}
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">{item.name}</h2>
+
+          {/* Price & prep time card */}
+          <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
+            <div className="flex flex-col gap-0.5">
               {hasDiscount ? (
                 <>
-                  <span className="text-sm text-gray-400 line-through flex items-center">
-                    {originalPrice.toFixed(2)} BDT
-                  </span>
-                  <span className="flex items-center text-green-400 font-bold">
-                    {finalPrice.toFixed(2)} BDT
-                    {hasDiscount && (
-                      <span className="ml-2 px-2 py-0.5 bg-red-500/80 text-white text-xs rounded-full flex items-center gap-1">
-                        <Tag className="w-3 h-3" />
-                        {discountPercent}% OFF
-                      </span>
-                    )}
+                  <span className="text-sm text-gray-400 line-through">{originalPrice} ৳</span>
+                  <span className="flex items-center gap-2 flex-wrap">
+                    <span className="text-lg sm:text-xl font-bold text-green-400">{finalPrice} ৳</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500/90 text-white text-xs font-medium rounded-full">
+                      <Tag className="w-3 h-3" />
+                      {discountPercent}% OFF
+                    </span>
                   </span>
                 </>
               ) : (
-                <span className="flex items-center text-green-400 font-bold">
-                  {originalPrice.toFixed(2)} BDT
-                </span>
+                <span className="text-lg sm:text-xl font-bold text-green-400">{originalPrice} ৳</span>
               )}
             </div>
-            {!item.isExtra && (
-              <span className="flex items-center text-indigo-300">
-                <Clock className="w-5 h-5 mr-1" />{item.time} min
+            {!item.isExtra && item.time && (
+              <span className="inline-flex items-center gap-1.5 text-sm text-gray-300 bg-gray-700 px-3 py-1.5 rounded-lg">
+                <Clock className="w-4 h-4 text-indigo-400" />
+                {item.time} min
               </span>
             )}
           </div>
-{selectedMainItems.length === 0 && (
-                <div className="mb-6 p-4 bg-gray-700 rounded-xl">
-                  <h3 className="text-lg font-semibold text-indigo-300 mb-3">Add {item.name}</h3>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-3 bg-gray-800 p-2 rounded-xl">
+
+          {/* Add main dish to order — clear section */}
+          {!item.isExtra && selectedMainItems.length === 0 && (
+            <section className="mb-6" aria-label="Add main item to order">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Add to order</h3>
+              <p className="text-sm text-gray-500 mb-3">Choose quantity for this item</p>
+              <div className="p-4 bg-gray-700/60 rounded-xl border border-gray-600/50">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center justify-between sm:justify-start gap-4">
+                    <span className="text-sm font-medium text-gray-300">Quantity</span>
+                    <div className="flex items-center gap-2 bg-gray-800 p-1.5 rounded-lg">
                       <button
                         onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-                        className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                        className="p-1.5 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
                         aria-label="Decrease quantity"
                       >
-                        <Minus className="w-5 h-5 text-white" />
+                        <Minus className="w-4 h-4 text-white" />
                       </button>
-                      <span className="text-xl font-bold w-6 text-center">{quantity}</span>
+                      <span className="text-lg font-bold w-8 text-center text-white tabular-nums">{quantity}</span>
                       <button
                         onClick={() => setQuantity(prev => prev + 1)}
-                        className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                        className="p-1.5 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
                         aria-label="Increase quantity"
                       >
-                        <Plus className="w-5 h-5 text-white" />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="text-sm text-gray-400">Price</div>
-                        <div className="text-lg font-bold text-green-400">{calculateCurrentItemSubtotal.toFixed(2)} BDT</div>
-                      </div>
-                      <button
-                        onClick={handleAddMainItem}
-                        className="flex items-center justify-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-500 transition"
-                      >
-                        <Plus className="w-5 h-5 mr-1" />
-                        Add
+                        <Plus className="w-4 h-4 text-white" />
                       </button>
                     </div>
                   </div>
+                  <div className="flex items-center justify-between sm:justify-end gap-3">
+                    <div className="text-right">
+                      <span className="text-xs text-gray-500 block">Subtotal</span>
+                      <span className="text-lg font-bold text-green-400">{calculateCurrentItemSubtotal} ৳</span>
+                    </div>
+                    <button
+                      onClick={handleAddMainItem}
+                      className="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-500 transition shrink-0"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Add to list
+                    </button>
+                  </div>
                 </div>
-              )}
-          {/* Include Items & Uses - Only show for non-extra items */}
+              </div>
+            </section>
+          )}
+
+          {/* About this item: ingredients & allergens */}
           {!item.isExtra && (
-            <div className="space-y-4 mb-6">
+            <section className="mb-6 space-y-4" aria-label="Product details">
               {item.mainItems && item.mainItems.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-indigo-300 mb-2">Main Ingredients</h3>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Ingredients</h3>
                   <ul className="flex flex-wrap gap-2">
                     {item.mainItems.map((ing, index) => (
-                      <li key={index} className="px-3 py-1 bg-gray-700 text-sm text-gray-50 rounded-full">{ing}</li>
+                      <li key={index} className="px-3 py-1.5 bg-gray-700/80 text-sm text-gray-200 rounded-lg border border-gray-600/50">{ing}</li>
                     ))}
                   </ul>
                 </div>
               )}
               {item.uses && (
                 <div>
-                  <h3 className="text-lg font-semibold text-indigo-300 mb-2">Contains</h3>
-                  <span className="px-3 py-1 bg-green-600 text-sm font-bold text-white rounded-full">{item.uses}</span>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Allergens / Contains</h3>
+                  <span className="inline-block px-3 py-1.5 bg-amber-500/20 text-amber-200 text-sm font-medium rounded-lg border border-amber-500/30">{item.uses}</span>
                 </div>
               )}
-            </div>
+            </section>
           )}
 
-          {/* Related/Extra Items */}
+          {/* Optional extras */}
           {relevantExtras.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-indigo-300 mb-3">Add Something Extra?</h3>
-              <div className="space-y-3">
+            <section className="mb-6" aria-label="Optional extras">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Add extras (optional)</h3>
+              <div className="space-y-2">
                 {relevantExtras.map(extra => {
                   const isSelected = selectedExtras.find(e => e.id === extra.id);
                   const extraImage = extra.images?.[0] || `https://placehold.co/60x60/475569/f1f5f9?text=${extra.name.split(' ')[0]}`;
                   return (
-                    <div key={extra.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-xl">
-                      <div className='flex items-center gap-3'>
-                        <img
-                          src={extraImage}
-                          alt={extra.name}
-                          className="w-12 h-12 object-cover rounded-lg"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = `https://placehold.co/60x60/475569/f1f5f9?text=${extra.name.split(' ')[0]}`;
-                          }}
-                        />
-                        <div className='flex flex-col'>
-                            <span className="text-gray-50 font-medium">{extra.name}</span>
-                            <span className="text-sm text-green-300">+ {Number(extra.price).toFixed(2)} BDT</span>
-                        </div>
+                    <div key={extra.id} className="flex gap-3 sm:gap-4 bg-gray-700/60 p-3 rounded-xl border border-gray-600/40">
+                      <img
+                        src={extraImage}
+                        alt={extra.name}
+                        className="w-11 h-11 sm:w-12 sm:h-12 object-cover rounded-lg shrink-0"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://placehold.co/60x60/475569/f1f5f9?text=${extra.name.split(' ')[0]}`;
+                        }}
+                      />
+                      <div className="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
+                        <span className="text-gray-100 font-medium wrap-break-word leading-snug">{extra.name}</span>
+                        <span className="text-sm text-green-400">+{Number(extra.price)} ৳</span>
                       </div>
-                      {isSelected ? (
-                         <div className="flex items-center space-x-2">
-                              <button
-                                  onClick={() => handleExtraQuantity(extra, -1)}
-                                  className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
-                              >
-                                  <Minus className="w-4 h-4 text-white" />
-                              </button>
-                              <span className="text-lg font-bold w-4 text-center">{isSelected.qty}</span>
-                              <button
-                                  onClick={() => handleExtraQuantity(extra, 1)}
-                                  className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
-                              >
-                                  <Plus className="w-4 h-4 text-white" />
-                              </button>
-                          </div>
-                      ) : (
+                      <div className="shrink-0 flex items-center gap-2 self-center">
+                        {isSelected ? (
+                          <>
+                            <button
+                              onClick={() => handleExtraQuantity(extra, -1)}
+                              className="p-1.5 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
+                              aria-label="Decrease"
+                            >
+                              <Minus className="w-4 h-4 text-white" />
+                            </button>
+                            <span className="text-base font-bold w-6 text-center text-white tabular-nums">{isSelected.qty}</span>
+                            <button
+                              onClick={() => handleExtraQuantity(extra, 1)}
+                              className="p-1.5 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
+                              aria-label="Increase"
+                            >
+                              <Plus className="w-4 h-4 text-white" />
+                            </button>
+                          </>
+                        ) : (
                           <button
-                              onClick={() => handleExtraToggle(extra)}
-                              className="px-4 py-1.5 bg-green-500 text-gray-900 font-semibold rounded-full hover:bg-green-400 transition"
+                            onClick={() => handleExtraToggle(extra)}
+                            className="px-4 py-2 bg-green-500 text-gray-900 font-semibold rounded-lg hover:bg-green-400 transition whitespace-nowrap"
                           >
-                              Add
+                            Add
                           </button>
-                      )}
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Selected Items List - Only show when isAddToCartActive is true */}
-          {isAddToCartActive && (
-            <>
-              {/* Selected Main Items */}
+          {/* Your order summary */}
+          {isAddToCartActive && (selectedMainItems.length > 0 || selectedExtras.length > 0) && (
+            <section className="mb-6" aria-label="Your order">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Your order</h3>
+
               {selectedMainItems.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-indigo-300 mb-3">Selected Items</h3>
-                  <div className="space-y-3">
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-indigo-300 mb-2">Main items</h4>
+                  <div className="space-y-2">
                     {selectedMainItems.map(mainEntry => (
-                      <div key={mainEntry.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-xl">
-                        <div className="flex items-center gap-3 flex-1">
+                      <div key={mainEntry.id} className="flex flex-wrap items-center justify-between gap-2 bg-gray-700/60 p-3 rounded-xl border border-gray-600/40">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                           <img
                             src={mainEntry.item.images?.[0] || fallbackImage}
                             alt={mainEntry.item.name}
-                            className="w-12 h-12 object-cover rounded-lg"
+                            className="w-11 h-11 sm:w-12 sm:h-12 object-cover rounded-lg shrink-0"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = fallbackImage;
                             }}
                           />
-                          <div className="flex flex-col flex-1">
-                            <span className="text-gray-50 font-medium">{mainEntry.item.name}</span>
-                            <span className="text-sm text-green-300">
-                              {finalPrice.toFixed(2)} BDT × {mainEntry.quantity} = {(finalPrice * mainEntry.quantity).toFixed(2)} BDT
+                          <div className="min-w-0">
+                            <span className="text-gray-100 font-medium block truncate">{mainEntry.item.name}</span>
+                            <span className="text-sm text-green-400">
+                              {finalPrice} ৳ × {mainEntry.quantity} = {(finalPrice * mainEntry.quantity)} ৳
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2 shrink-0">
                           <button
                             onClick={() => handleUpdateMainItemQuantity(mainEntry.id, -1)}
-                            className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                            className="p-1.5 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
+                            aria-label="Decrease"
                           >
                             <Minus className="w-4 h-4 text-white" />
                           </button>
-                          <span className="text-lg font-bold w-4 text-center">{mainEntry.quantity}</span>
+                          <span className="text-base font-bold w-6 text-center text-white tabular-nums">{mainEntry.quantity}</span>
                           <button
                             onClick={() => handleUpdateMainItemQuantity(mainEntry.id, 1)}
-                            className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                            className="p-1.5 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
+                            aria-label="Increase"
                           >
                             <Plus className="w-4 h-4 text-white" />
                           </button>
                           <button
                             onClick={() => handleRemoveMainItem(mainEntry.id)}
-                            className="ml-2 p-1 bg-red-600 rounded-full hover:bg-red-500 transition"
+                            className="p-1.5 bg-red-600/80 rounded-lg hover:bg-red-500 transition"
                             aria-label="Remove item"
                           >
                             <X className="w-4 h-4 text-white" />
@@ -391,51 +399,50 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
                 </div>
               )}
 
-              {/* Selected Extras */}
               {selectedExtras.length > 0 && (
-                <div className="mb-6">
-                  {/* {selectedMainItems.length > 0 && (
-                    <h3 className="text-lg font-semibold text-indigo-300 mb-3">Selected Extras</h3>
-                  )} */}
-                  <div className="space-y-3">
+                <div>
+                  <h4 className="text-sm font-medium text-indigo-300 mb-2">Extras</h4>
+                  <div className="space-y-2">
                     {selectedExtras.map(extra => {
                       const extraImage = extra.images?.[0] || `https://placehold.co/60x60/475569/f1f5f9?text=${extra.name.split(' ')[0]}`;
                       return (
-                        <div key={extra.id} className="flex justify-between items-center bg-gray-700 p-3 rounded-xl">
-                          <div className="flex items-center gap-3 flex-1">
+                        <div key={extra.id} className="flex flex-wrap items-center justify-between gap-2 bg-gray-700/60 p-3 rounded-xl border border-gray-600/40">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             <img
                               src={extraImage}
                               alt={extra.name}
-                              className="w-12 h-12 object-cover rounded-lg"
+                              className="w-11 h-11 sm:w-12 sm:h-12 object-cover rounded-lg shrink-0"
                               onError={(e) => {
                                 e.target.onerror = null;
                                 e.target.src = `https://placehold.co/60x60/475569/f1f5f9?text=${extra.name.split(' ')[0]}`;
                               }}
                             />
-                            <div className="flex flex-col flex-1">
-                              <span className="text-gray-50 font-medium">{extra.name}</span>
-                              <span className="text-sm text-green-300">
-                                {Number(extra.price).toFixed(2)} BDT × {extra.qty} = {(extra.price * extra.qty).toFixed(2)} BDT
+                            <div className="min-w-0">
+                              <span className="text-gray-100 font-medium block truncate">{extra.name}</span>
+                              <span className="text-sm text-green-400">
+                                {Number(extra.price)} ৳ × {extra.qty} = {(extra.price * extra.qty)} ৳
                               </span>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2 shrink-0">
                             <button
                               onClick={() => handleExtraQuantity(extra, -1)}
-                              className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                              className="p-1.5 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
+                              aria-label="Decrease"
                             >
                               <Minus className="w-4 h-4 text-white" />
                             </button>
-                            <span className="text-lg font-bold w-4 text-center">{extra.qty}</span>
+                            <span className="text-base font-bold w-6 text-center text-white tabular-nums">{extra.qty}</span>
                             <button
                               onClick={() => handleExtraQuantity(extra, 1)}
-                              className="p-1 bg-indigo-600 rounded-full hover:bg-indigo-500 transition"
+                              className="p-1.5 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
+                              aria-label="Increase"
                             >
                               <Plus className="w-4 h-4 text-white" />
                             </button>
                             <button
                               onClick={() => handleRemoveExtra(extra.id)}
-                              className="ml-2 p-1 bg-red-600 rounded-full hover:bg-red-500 transition"
+                              className="p-1.5 bg-red-600/80 rounded-lg hover:bg-red-500 transition"
                               aria-label="Remove extra"
                             >
                               <X className="w-4 h-4 text-white" />
@@ -447,36 +454,31 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
                   </div>
                 </div>
               )}
-            </>
+            </section>
           )}
-          {
-            selectedMainItems.length > 0 || selectedExtras.length > 0
-            ? (
-            <div className="mb-4 p-4 bg-gray-700 rounded-xl">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-xl font-bold text-white">Total:</span>
-                <span className="text-2xl font-bold text-green-400">{calculateSubtotal.toFixed(2)} BDT</span>
-              </div>
-              <button
-                onClick={() => {
-                  if (selectedMainItems.length > 0 || selectedExtras.length > 0) {
-                    handleAddToCart();
-                  } else {
-                    setIsAddToCartActive(true);
-                  }
-                }}
-                className="w-full flex items-center justify-center px-6 py-3 bg-green-500 text-gray-900 font-extrabold rounded-xl shadow-lg hover:bg-green-400 transition-transform duration-100 transform active:scale-[0.98]"
-              >
-                Add All to Cart ({calculateSubtotal.toFixed(2)} BDT)
-              </button>
-            </div>
 
-            )
-            : null
-          }
+          </div>
         </div>
-      </div>
-    </div>
+
+        {/* Total & Add to cart — fixed footer, outside scroll */}
+        {(selectedMainItems.length > 0 || selectedExtras.length > 0) && (
+          <div className="shrink-0 border-t border-gray-700 bg-gray-800 px-4 sm:px-6 pt-4 pb-5 sm:pb-6">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-base font-semibold text-gray-200">Total</span>
+              <span className="text-xl sm:text-2xl font-bold text-green-400 tabular-nums">{calculateSubtotal} ৳</span>
+            </div>
+            <button
+              onClick={() => {
+                if (selectedMainItems.length > 0 || selectedExtras.length > 0) handleAddToCart();
+                else setIsAddToCartActive(true);
+              }}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-green-500 text-gray-900 font-bold rounded-xl shadow-lg hover:bg-green-400 active:scale-[0.99] transition"
+            >
+              Add all to cart · {calculateSubtotal} ৳
+            </button>
+          </div>
+        )}
+    </BaseModal>
   );
 };
 

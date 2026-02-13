@@ -1,0 +1,339 @@
+{
+  "orders": [
+    {
+      "id": "ORD-1770956285108",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 2,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "High"
+        }
+      ],
+      "total": 500,
+      "status": "cancelled",
+      "priority": "High",
+      "createdAt": "2026-02-13T04:18:05.108Z",
+      "updatedAt": "2026-02-13T04:19:25.677Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1770957054800",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 440,
+      "status": "cancelled",
+      "priority": "Medium",
+      "createdAt": "2026-02-13T04:30:54.800Z",
+      "updatedAt": "2026-02-13T04:31:01.382Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1770957070249",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 250,
+      "status": "completed",
+      "priority": "Medium",
+      "createdAt": "2026-02-13T04:31:10.249Z",
+      "updatedAt": "2026-02-13T06:45:19.785Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "completedAt": "2026-02-13T06:45:19.785Z"
+    },
+    {
+      "id": "ORD-1770958658886",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 2,
+          "name": "Classic Eggs Benedict",
+          "quantity": 2,
+          "price": 150,
+          "finalPrice": 130,
+          "extras": [
+            {
+              "id": "water",
+              "name": "Bottled Water",
+              "price": "20",
+              "qty": 1
+            }
+          ],
+          "priority": "Medium"
+        }
+      ],
+      "total": 280,
+      "status": "completed",
+      "priority": "Medium",
+      "createdAt": "2026-02-13T04:57:38.886Z",
+      "updatedAt": "2026-02-13T04:59:13.702Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1770958804865",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 250,
+      "status": "completed",
+      "priority": "Medium",
+      "createdAt": "2026-02-13T05:00:04.865Z",
+      "updatedAt": "2026-02-13T05:03:40.887Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1770959643117",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 5,
+          "name": "Avocado Toast Deluxe",
+          "quantity": 1,
+          "price": 280,
+          "finalPrice": 280,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 280,
+      "status": "completed",
+      "priority": "Medium",
+      "totalPrepTime": 10,
+      "createdAt": "2026-02-13T05:14:03.117Z",
+      "updatedAt": "2026-02-13T05:25:49.122Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "completedAt": "2026-02-13T05:25:49.122Z"
+    },
+    {
+      "id": "ORD-1770960393066",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [
+            {
+              "id": "juice",
+              "name": "Apple Juice",
+              "price": 60,
+              "qty": 1
+            }
+          ],
+          "priority": "Medium"
+        }
+      ],
+      "total": 310,
+      "status": "cancelled",
+      "priority": "Medium",
+      "totalPrepTime": 20,
+      "createdAt": "2026-02-13T05:26:33.066Z",
+      "updatedAt": "2026-02-13T05:27:32.636Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false
+    },
+    {
+      "id": "ORD-1770960491799",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [
+            {
+              "id": "juice",
+              "name": "Apple Juice",
+              "price": 60,
+              "qty": 1
+            }
+          ],
+          "priority": "Medium"
+        }
+      ],
+      "total": 310,
+      "status": "completed",
+      "priority": "Medium",
+      "totalPrepTime": 20,
+      "createdAt": "2026-02-13T05:28:11.799Z",
+      "updatedAt": "2026-02-13T05:34:36.730Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "acceptedAt": "2026-02-13T05:30:26.379Z",
+      "completedAt": "2026-02-13T05:34:36.730Z"
+    },
+    {
+      "id": "ORD-1770961100642",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 7,
+          "name": "Chili",
+          "quantity": 1,
+          "price": 250,
+          "finalPrice": 250,
+          "extras": [
+            {
+              "id": "water",
+              "name": "Bottled Water",
+              "price": "20",
+              "qty": 2
+            }
+          ],
+          "priority": "Medium"
+        }
+      ],
+      "total": 290,
+      "status": "completed",
+      "priority": "Medium",
+      "totalPrepTime": 20,
+      "createdAt": "2026-02-13T05:38:20.642Z",
+      "updatedAt": "2026-02-13T05:41:23.689Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "acceptedAt": "2026-02-13T05:40:15.000Z",
+      "completedAt": "2026-02-13T05:41:23.689Z"
+    },
+    {
+      "id": "ORD-1770962079549",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 5,
+          "name": "Avocado Toast Deluxe",
+          "quantity": 1,
+          "price": 280,
+          "finalPrice": 280,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 280,
+      "status": "completed",
+      "priority": "Medium",
+      "totalPrepTime": 10,
+      "createdAt": "2026-02-13T05:54:39.549Z",
+      "updatedAt": "2026-02-13T05:55:53.169Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "acceptedAt": "2026-02-13T05:54:46.930Z",
+      "completedAt": "2026-02-13T05:55:53.169Z"
+    },
+    {
+      "id": "ORD-1770962555811",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 2,
+          "name": "Classic Eggs Benedict",
+          "quantity": 1,
+          "price": 150,
+          "finalPrice": 130,
+          "extras": [],
+          "priority": "Medium"
+        },
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium",
+          "isLaterOrder": true,
+          "addedAt": "2026-02-13T06:12:51.234Z"
+        }
+      ],
+      "total": 570,
+      "status": "completed",
+      "priority": "Medium",
+      "totalPrepTime": 15,
+      "createdAt": "2026-02-13T06:02:35.811Z",
+      "updatedAt": "2026-02-13T06:45:12.129Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": true,
+      "acceptedAt": "2026-02-13T06:02:44.293Z",
+      "completedAt": "2026-02-13T06:45:12.129Z",
+      "queueTimeSeconds": 8,
+      "processingTimeSeconds": 2548
+    },
+    {
+      "id": "ORD-1770963171234",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 440,
+      "status": "cancelled",
+      "priority": "Medium",
+      "totalPrepTime": 25,
+      "createdAt": "2026-02-13T06:12:51.234Z",
+      "updatedAt": "2026-02-13T06:17:15.340Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "mergedInto": "ORD-1770962555811"
+    }
+  ]
+}

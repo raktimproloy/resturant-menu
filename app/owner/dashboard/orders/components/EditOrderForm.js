@@ -16,9 +16,9 @@ export default function EditOrderForm({
         <h4 className="text-base lg:text-lg font-semibold text-white">Edit Order Items</h4>
         <button
           onClick={onAddItemClick}
-          className="w-full sm:w-auto px-3 lg:px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base"
+          className="w-full sm:w-auto min-h-[44px] px-3 lg:px-4 py-3 sm:py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base touch-manipulation"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 shrink-0" />
           Add Item
         </button>
       </div>
@@ -40,30 +40,33 @@ export default function EditOrderForm({
                   <div className="flex items-center gap-2 mt-2">
                     <button
                       onClick={() => onUpdateItemQuantity(index, -1)}
-                      className="p-1 bg-gray-600 rounded hover:bg-gray-500"
+                      className="p-2.5 sm:p-1 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500 touch-manipulation"
+                      aria-label="Decrease quantity"
                     >
                       <Minus className="w-4 h-4 text-white" />
                     </button>
-                    <span className="text-white font-semibold w-8 text-center">{item.quantity}</span>
+                    <span className="text-white font-semibold w-8 text-center min-h-[44px] sm:min-h-0 flex items-center justify-center">{item.quantity}</span>
                     <button
                       onClick={() => onUpdateItemQuantity(index, 1)}
-                      className="p-1 bg-gray-600 rounded hover:bg-gray-500"
+                      className="p-2.5 sm:p-1 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center bg-gray-600 rounded hover:bg-gray-500 touch-manipulation"
+                      aria-label="Increase quantity"
                     >
                       <Plus className="w-4 h-4 text-white" />
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <input
                     type="number"
                     step="0.01"
                     value={item.finalPrice || item.price}
                     onChange={(e) => onUpdatePrice(index, e.target.value)}
-                    className="w-20 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-sm"
+                    className="w-20 min-w-[72px] px-2 py-2 sm:py-1.5 bg-gray-600 border border-gray-500 rounded text-white text-sm min-h-[44px] sm:min-h-0"
                   />
                   <button
                     onClick={() => onRemoveItem(index)}
-                    className="p-1 bg-red-600 rounded hover:bg-red-500"
+                    className="p-2.5 sm:p-1.5 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center bg-red-600 rounded hover:bg-red-500 touch-manipulation"
+                    aria-label="Remove item"
                   >
                     <Trash2 className="w-4 h-4 text-white" />
                   </button>
@@ -80,20 +83,20 @@ export default function EditOrderForm({
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-3 lg:pt-4 border-t border-gray-700 gap-3">
         <div className="text-xl lg:text-2xl font-bold text-green-400">
-          {Number(editFormData.total).toFixed(2)} BDT
+          {Number(editFormData.total)} ৳
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={onCancel}
-            className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm lg:text-base"
+            className="flex-1 sm:flex-none px-3 lg:px-4 py-3 sm:py-2 min-h-[44px] bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm lg:text-base touch-manipulation"
           >
             Cancel
           </button>
           <button
             onClick={onSave}
-            className="flex-1 sm:flex-none px-3 lg:px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base"
+            className="flex-1 sm:flex-none px-3 lg:px-4 py-3 sm:py-2 min-h-[44px] bg-green-600 hover:bg-green-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base touch-manipulation"
           >
-            <Save className="w-4 h-4" />
+            <Save className="w-4 h-4 shrink-0" />
             Save
           </button>
         </div>

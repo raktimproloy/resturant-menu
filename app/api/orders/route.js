@@ -94,14 +94,15 @@ export async function POST(request) {
     const timestamp = Date.now();
     const orderId = `ORD-${timestamp}`;
     
-    // Create new order
+    // Create new order (totalPrepTime in minutes for countdown)
     const newOrder = {
       id: orderId,
       tableNumber: body.tableNumber || null,
       items: body.items || [],
       total: body.total || 0,
-      status: 'pending', // pending, accepted, processing, completed, cancelled
+      status: 'pending',
       priority: body.priority || 'Medium',
+      totalPrepTime: body.totalPrepTime ?? 15, // minutes, for real-time countdown
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       customerInfo: body.customerInfo || {},
@@ -304,6 +305,26 @@ export async function PUT(request) {
             }
           });
         }
+      }
+    }
+
+    // Store timestamps when status changes (for queue vs processing time)
+    const nextStatus = updateData.status ?? currentOrder.status;
+    const nowIso = new Date().toISOString();
+    if (nextStatus === 'accepted' || nextStatus === 'processing') {
+      if (!currentOrder.acceptedAt) updateData.acceptedAt = nowIso;
+    }
+    if (nextStatus === 'completed') {
+      updateData.completedAt = nowIso;
+      // Persist total queue time and total processing time (in seconds)
+      const created = currentOrder.createdAt ? new Date(currentOrder.createdAt).getTime() : null;
+      const accepted = (currentOrder.acceptedAt || updateData.acceptedAt) ? new Date(currentOrder.acceptedAt || updateData.acceptedAt).getTime() : null;
+      const completed = new Date(nowIso).getTime();
+      if (created != null && accepted != null) {
+        updateData.queueTimeSeconds = Math.round((accepted - created) / 1000);
+      }
+      if (accepted != null) {
+        updateData.processingTimeSeconds = Math.round((completed - accepted) / 1000);
       }
     }
     

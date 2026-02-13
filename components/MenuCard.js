@@ -17,21 +17,26 @@ const MenuCard = ({ item, onShowDetails, onAddToCartDirectly }) => {
 
   return (
     <div
-      className={`group bg-gray-800 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 min-h-[250px] ${item.status === 'Available' ? 'hover:shadow-indigo-800/40 hover:-translate-y-1 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
+      className={`group bg-gray-800 rounded-2xl overflow-hidden shadow-lg transform transition duration-300 min-h-[220px] sm:min-h-[250px] w-full min-w-0 flex flex-col ${item.status === 'Available' ? 'hover:shadow-indigo-800/40 hover:-translate-y-1 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
       onClick={() => item.status === 'Available' && onShowDetails(item)}
     >
-      <div className="relative h-32 sm:h-36 w-full overflow-hidden">
-        {/* Image */}
+      <div className="relative h-40 sm:h-48 w-full overflow-hidden shrink-0">
+        {/* Image — larger, centered crop for focus */}
         <img
           src={primaryImage}
           alt={item.name}
-          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+          className="object-cover object-center w-full h-full transition-transform duration-500 group-hover:scale-110"
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = fallbackImage;
           }}
         />
-        {item.tag && (
+        {item.isExtra && (
+          <div className="absolute top-2 left-2 bg-amber-500/90 text-[11px] uppercase tracking-wide font-bold px-2.5 py-0.5 rounded-full text-white">
+            Add-on
+          </div>
+        )}
+        {item.tag && !item.isExtra && (
           <div className="absolute top-2 left-2 bg-indigo-500/80 text-[11px] uppercase tracking-wide font-bold px-2.5 py-0.5 rounded-full text-white">
             {item.tag}
           </div>
@@ -48,7 +53,7 @@ const MenuCard = ({ item, onShowDetails, onAddToCartDirectly }) => {
           </div>
         )}
       </div>
-      <div className="p-3 sm:p-4 flex flex-col h-[calc(100%-8rem)]">
+      <div className="p-3 sm:p-4 flex flex-col min-h-0 flex-1 overflow-hidden">
         {/* Name */}
         <h3 className="text-base sm:text-lg font-semibold text-gray-50 mb-2 line-clamp-2 leading-tight">
           {item.name}
@@ -70,15 +75,15 @@ const MenuCard = ({ item, onShowDetails, onAddToCartDirectly }) => {
             {hasDiscount ? (
               <>
                 <span className="text-sm text-gray-400 line-through">
-                  {originalPrice.toFixed(2)} BDT
+                  {originalPrice} ৳
                 </span>
                 <span className="text-lg sm:text-xl font-bold text-green-400">
-                  {finalPrice.toFixed(2)} BDT
+                  {finalPrice} ৳
                 </span>
               </>
             ) : (
               <span className="text-lg sm:text-xl font-bold text-green-400">
-                {originalPrice.toFixed(2)} BDT
+                {originalPrice} ৳
               </span>
             )}
           </div>
