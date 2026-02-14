@@ -100,7 +100,7 @@ export default function OwnerLogin() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email
+                Email (admin@gmail.com)
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -120,7 +120,7 @@ export default function OwnerLogin() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Password
+                Password (Test1234@)
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -168,11 +168,15 @@ export default function OwnerLogin() {
 
           <div className="mt-4 text-center">
             <Link href="/manager" className="text-gray-500 hover:text-gray-400 text-sm">
-              Manager Login
+              Manager
+            </Link>
+            {' | '}
+            <Link href="/waiter" className="text-gray-500 hover:text-gray-400 text-sm">
+              Waiter
             </Link>
             {' | '}
             <Link href="/cashier" className="text-gray-500 hover:text-gray-400 text-sm">
-              Cashier Login
+              Cashier
             </Link>
           </div>
         </div>

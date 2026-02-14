@@ -30,7 +30,7 @@ export default function NotificationPanel({ notifications = [], onClose, isOpen 
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} aria-hidden="true" />
-      <div className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-gray-800 border-l border-gray-700 shadow-2xl z-50 flex flex-col">
+      <div className="fixed top-14 right-0 bottom-0 w-full max-w-sm bg-gray-800 border-l border-gray-700 shadow-2xl z-50 flex flex-col rounded-tl-xl">
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <Bell className="w-5 h-5 text-indigo-400" />

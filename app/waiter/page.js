@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChefHat, Mail, Lock, LogIn } from 'lucide-react';
 
-export default function CashierLogin() {
+export default function WaiterLogin() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
@@ -15,14 +15,13 @@ export default function CashierLogin() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Check if already logged in
     const token = localStorage.getItem('adminToken');
     const adminData = localStorage.getItem('adminData');
 
     if (token && adminData) {
       const admin = JSON.parse(adminData);
-      if (admin.role === 'cashier') {
-        router.push('/cashier/dashboard');
+      if (admin.role === 'waiter') {
+        router.push('/waiter/dashboard');
       }
     }
   }, [router]);
@@ -52,39 +51,37 @@ export default function CashierLogin() {
       const data = await response.json();
 
       if (data.success) {
-        // Check if user is a cashier
-        if (data.admin.role !== 'cashier') {
-          setError('Access denied. This login is for cashiers only.');
+        if (data.admin.role !== 'waiter') {
+          setError('Access denied. This login is for waiters only.');
           setLoading(false);
           return;
         }
 
-        // Store token and admin data
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminData', JSON.stringify(data.admin));
 
-        // Redirect to cashier dashboard
-        router.push('/cashier/dashboard');
+        router.push('/waiter/dashboard');
       } else {
         setError(data.error || 'Login failed');
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      console.error('Login error:', error);
+      setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4 py-8">
       <div className="w-full max-w-md">
-        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-700">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
-              <ChefHat className="w-8 h-8 text-white" />
+        <div className="bg-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-700">
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-cyan-600 rounded-full mb-4">
+              <ChefHat className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Cashier Login</h1>
-            <p className="text-gray-400">Sign in to your cashier account</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Waiter Login</h1>
+            <p className="text-gray-400 text-sm sm:text-base">Access orders and dashboard</p>
           </div>
 
           {error && (
@@ -107,8 +104,9 @@ export default function CashierLogin() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="cashier@restaurant.com"
+                  className="w-full pl-10 pr-4 py-3 min-h-[48px] bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-base"
+                  placeholder="waiter@restaurant.com"
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -126,8 +124,9 @@ export default function CashierLogin() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 min-h-[48px] bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-base"
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                 />
               </div>
             </div>
@@ -135,7 +134,7 @@ export default function CashierLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 min-h-[48px] bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
             >
               {loading ? (
                 <>
@@ -151,15 +150,6 @@ export default function CashierLogin() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              Don't have an account?{' '}
-              <Link href="/signup" className="text-indigo-400 hover:text-indigo-300">
-                Sign up
-              </Link>
-            </p>
-          </div>
-
           <div className="mt-4 text-center">
             <Link href="/owner" className="text-gray-500 hover:text-gray-400 text-sm">
               Owner
@@ -169,8 +159,8 @@ export default function CashierLogin() {
               Manager
             </Link>
             {' | '}
-            <Link href="/waiter" className="text-gray-500 hover:text-gray-400 text-sm">
-              Waiter
+            <Link href="/cashier" className="text-gray-500 hover:text-gray-400 text-sm">
+              Cashier
             </Link>
           </div>
         </div>

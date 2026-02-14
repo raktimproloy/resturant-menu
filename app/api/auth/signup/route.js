@@ -17,7 +17,7 @@ export async function POST(request) {
       );
     }
 
-    if (!['owner', 'manager', 'cashier'].includes(role)) {
+    if (!['owner', 'manager', 'cashier', 'waiter'].includes(role)) {
       return NextResponse.json(
         { success: false, error: 'Invalid role' },
         { status: 400 }
@@ -61,6 +61,7 @@ export async function POST(request) {
         id: admin._id,
         username: admin.username,
         email: admin.email,
+        role: admin.role,
       },
     });
   } catch (error) {

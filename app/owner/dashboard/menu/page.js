@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, X, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, ToggleLeft, ToggleRight } from 'lucide-react';
 
 export default function MenuManagement() {
   const [menuItems, setMenuItems] = useState([]);
@@ -14,7 +14,7 @@ export default function MenuManagement() {
     name: '',
     price: '',
     categoryIds: [],
-    time: '',
+    stock: '',
     status: 'Available',
     tag: '',
     mainItems: [],
@@ -136,6 +136,26 @@ export default function MenuManagement() {
     }
   };
 
+  const handleToggleStatus = async (item) => {
+    const newStatus = item.status === 'Available' ? 'Not Available' : 'Available';
+    try {
+      const response = await fetch('/api/menu', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id, status: newStatus }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        fetchMenuItems();
+      } else {
+        alert(data.error || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      alert('An error occurred');
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this menu item?')) return;
 
@@ -162,7 +182,7 @@ export default function MenuManagement() {
       name: item.name || '',
       price: item.price || '',
       categoryIds: item.categoryIds || [],
-      time: item.time || '',
+      stock: item.stock !== undefined && item.stock !== null ? item.stock : '',
       status: item.status || 'Available',
       tag: item.tag || '',
       mainItems: item.mainItems || [],
@@ -183,7 +203,7 @@ export default function MenuManagement() {
       name: '',
       price: '',
       categoryIds: [],
-      time: '',
+      stock: '',
       status: 'Available',
       tag: '',
       mainItems: [],
@@ -237,7 +257,10 @@ export default function MenuManagement() {
                 <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden md:table-cell">
+                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Stock
+                </th>
+                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
@@ -264,16 +287,31 @@ export default function MenuManagement() {
                       </span>
                     )}
                   </td>
-                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap hidden md:table-cell">
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${
+                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-gray-300 text-sm">
+                    {item.stock !== undefined && item.stock !== null ? item.stock : '—'}
+                  </td>
+                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => handleToggleStatus(item)}
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
                         item.status === 'Available'
-                          ? 'bg-green-900 text-green-200'
-                          : 'bg-red-900 text-red-200'
+                          ? 'bg-green-600/30 text-green-400 hover:bg-green-600/50'
+                          : 'bg-red-600/30 text-red-400 hover:bg-red-600/50'
                       }`}
+                      title={item.status === 'Available' ? 'Click to set Unavailable' : 'Click to set Available'}
                     >
-                      {item.status}
-                    </span>
+                      {item.status === 'Available' ? (
+                        <>
+                          <ToggleRight className="w-4 h-4" />
+                          Available
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="w-4 h-4" />
+                          Unavailable
+                        </>
+                      )}
+                    </button>
                   </td>
                   <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right">
                     <div className="flex justify-end gap-1 sm:gap-2">
@@ -382,12 +420,13 @@ export default function MenuManagement() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Time (minutes)
+                      Stock
                     </label>
                     <input
                       type="number"
-                      value={formData.time}
-                      onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                      min="0"
+                      value={formData.stock}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                       className="w-full px-3 lg:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm lg:text-base"
                     />
                   </div>

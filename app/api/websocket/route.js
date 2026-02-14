@@ -8,15 +8,17 @@ const connections = global.connections;
 
 /**
  * GET /api/websocket - Server-Sent Events endpoint for real-time updates
+ * Query: ?role=owner|manager|waiter — used for role-based notification routing
  */
 export async function GET(request) {
   const encoder = new TextEncoder();
   const connectionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  
+  const { searchParams } = new URL(request.url);
+  const role = searchParams.get('role') || null;
+
   const stream = new ReadableStream({
     start(controller) {
-      // Add this connection
-      connections.set(connectionId, controller);
+      connections.set(connectionId, { controller, role });
       
       // Send initial connection message
       const initData = JSON.stringify({ 

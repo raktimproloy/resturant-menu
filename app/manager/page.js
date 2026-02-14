@@ -166,11 +166,15 @@ export default function ManagerLogin() {
 
           <div className="mt-4 text-center">
             <Link href="/owner" className="text-gray-500 hover:text-gray-400 text-sm">
-              Owner Login
+              Owner
+            </Link>
+            {' | '}
+            <Link href="/waiter" className="text-gray-500 hover:text-gray-400 text-sm">
+              Waiter
             </Link>
             {' | '}
             <Link href="/cashier" className="text-gray-500 hover:text-gray-400 text-sm">
-              Cashier Login
+              Cashier
             </Link>
           </div>
         </div>

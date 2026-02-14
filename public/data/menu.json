@@ -7,7 +7,7 @@
         "lunch",
         4
       ],
-      "time": 25,
+      "stock": 25,
       "price": 450,
       "status": "Available",
       "tag": "Special",
@@ -49,7 +49,7 @@
         4,
         1
       ],
-      "time": 15,
+      "stock": 15,
       "price": 150,
       "status": "Available",
       "tag": "Fast",
@@ -85,7 +85,7 @@
         "lunch",
         2
       ],
-      "time": 30,
+      "stock": 30,
       "price": 250,
       "status": "Not Available",
       "tag": "Delicious",
@@ -116,7 +116,7 @@
         "treats",
         2
       ],
-      "time": 10,
+      "stock": 10,
       "price": 200,
       "status": "Not Available",
       "tag": "Fast",
@@ -150,7 +150,7 @@
       "name": "Avocado Toast Deluxe",
       "categoryId": "breakfast",
       "categoryLabel": "Breakfast",
-      "time": 10,
+      "stock": 10,
       "price": 280,
       "status": "Available",
       "tag": "Delicious",
@@ -178,7 +178,7 @@
       "name": "Kids Chicken Fingers",
       "categoryId": "treats",
       "categoryLabel": "Treats & Desserts",
-      "time": 20,
+      "stock": 20,
       "price": 300,
       "status": "Available",
       "tag": "Special",
@@ -211,7 +211,7 @@
         1,
         2
       ],
-      "time": 20,
+      "stock": 20,
       "price": 250,
       "finalPrice": 250,
       "status": "Available",

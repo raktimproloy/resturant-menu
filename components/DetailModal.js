@@ -1,4 +1,4 @@
-import { Clock, X, Minus, Plus, Tag } from 'lucide-react';
+import { Package, X, Minus, Plus, Tag } from 'lucide-react';
 import React, { useState, useMemo, useEffect } from 'react';
 import BaseModal from './BaseModal';
 
@@ -208,10 +208,10 @@ const DetailModal = ({ item, extraItems, priorityStyles, onClose, onAddToCart })
                 <span className="text-lg sm:text-xl font-bold text-green-400">{originalPrice} ৳</span>
               )}
             </div>
-            {!item.isExtra && item.time && (
+            {!item.isExtra && item.stock !== undefined && item.stock !== null && (
               <span className="inline-flex items-center gap-1.5 text-sm text-gray-300 bg-gray-700 px-3 py-1.5 rounded-lg">
-                <Clock className="w-4 h-4 text-indigo-400" />
-                {item.time} min
+                <Package className="w-4 h-4 text-indigo-400" />
+                Stock: {item.stock}
               </span>
             )}
           </div>

@@ -1,7 +1,24 @@
 import { NextResponse } from 'next/server';
-import { readOrdersData, writeOrdersData } from '@/lib/jsonHandler';
+import { readOrdersData, writeOrdersData, readMenuData, writeMenuData } from '@/lib/jsonHandler';
 import { getTodayDateString } from '@/lib/utils';
 import { broadcastMessage } from '@/lib/broadcast';
+
+/** Decrement menu item stock when order is placed. Items without stock field are skipped. */
+function decrementMenuStock(items) {
+  if (!items || items.length === 0) return;
+  const menuData = readMenuData();
+  const menu = menuData.menu || [];
+  let changed = false;
+  for (const orderItem of items) {
+    const menuItem = menu.find(m => m.id === orderItem.id);
+    if (menuItem && typeof menuItem.stock === 'number') {
+      const qty = orderItem.quantity || 1;
+      menuItem.stock = Math.max(0, (menuItem.stock || 0) - qty);
+      changed = true;
+    }
+  }
+  if (changed) writeMenuData(menuData);
+}
 
 /**
  * GET /api/orders - Get all orders for today or specific date
@@ -72,7 +89,7 @@ export async function POST(request) {
         data.orders[existingOrderIndex].hasLaterOrderItems = true;
         
         if (writeOrdersData(data, date)) {
-          // Broadcast order update
+          decrementMenuStock(body.items || []);
           broadcastMessage('order_update', data.orders[existingOrderIndex]);
           
           return NextResponse.json({ 
@@ -93,18 +110,21 @@ export async function POST(request) {
     // Generate order ID
     const timestamp = Date.now();
     const orderId = `ORD-${timestamp}`;
-    
+    const nowIso = new Date().toISOString();
+    const initialStatus = body.status === 'processing' ? 'processing' : 'pending';
+
     // Create new order (totalPrepTime in minutes for countdown)
     const newOrder = {
       id: orderId,
       tableNumber: body.tableNumber || null,
       items: body.items || [],
       total: body.total || 0,
-      status: 'pending',
+      status: initialStatus,
       priority: body.priority || 'Medium',
       totalPrepTime: body.totalPrepTime ?? 15, // minutes, for real-time countdown
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      acceptedAt: initialStatus === 'processing' ? nowIso : undefined,
       customerInfo: body.customerInfo || {},
       notes: body.notes || '',
       hasLaterOrderItems: false,
@@ -113,9 +133,13 @@ export async function POST(request) {
     data.orders.push(newOrder);
     
     if (writeOrdersData(data, date)) {
-      // Broadcast new order
-      broadcastMessage('new_order', newOrder);
-      
+      decrementMenuStock(body.items || []);
+      if (initialStatus === 'processing') {
+        broadcastMessage('order_update', newOrder);
+      } else {
+        broadcastMessage('new_order', newOrder, { targetRoles: ['owner'] });
+      }
+
       return NextResponse.json({ 
         success: true, 
         message: 'Order created successfully',

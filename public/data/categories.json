@@ -18,7 +18,8 @@
     },
     {
       "id": 5,
-      "label": "Other"
+      "label": "Other",
+      "enabled": true
     }
   ]
 }

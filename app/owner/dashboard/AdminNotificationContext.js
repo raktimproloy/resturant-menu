@@ -11,7 +11,7 @@ export function useAdminNotifications() {
   return ctx;
 }
 
-export function AdminNotificationProvider({ children }) {
+export function AdminNotificationProvider({ children, role = null }) {
   const [newOrderNotification, setNewOrderNotification] = useState(null);
   const [waiterCallNotification, setWaiterCallNotification] = useState(null);
   const [mutedOrders, setMutedOrders] = useState(new Set());
@@ -57,9 +57,10 @@ export function AdminNotificationProvider({ children }) {
     setTimeout(() => ctx.close(), 500);
   }, []);
 
-  // WebSocket for real-time updates (global for all admin pages)
+  // WebSocket for real-time updates (connects with role for targeted notifications)
   useEffect(() => {
-    const eventSource = new EventSource('/api/websocket');
+    const url = role ? `/api/websocket?role=${encodeURIComponent(role)}` : '/api/websocket';
+    const eventSource = new EventSource(url);
     eventSource.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
@@ -89,7 +90,7 @@ export function AdminNotificationProvider({ children }) {
     };
     eventSource.onerror = () => {};
     return () => eventSource.close();
-  }, [playNewOrderSound, playWaiterCallSound]);
+  }, [role, playNewOrderSound, playWaiterCallSound]);
 
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {

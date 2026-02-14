@@ -3,28 +3,27 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Utensils, PlusCircle, ShoppingBag, LogOut, Menu as MenuIcon, LayoutDashboard, History, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, History, LogOut, Menu as MenuIcon, ShoppingCart } from 'lucide-react';
 import { AdminNotificationProvider } from '@/app/owner/dashboard/AdminNotificationContext';
 
-export default function ManagerLayout({ children }) {
+export default function WaiterLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [adminData, setAdminData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    // Check if manager is logged in
     const token = localStorage.getItem('adminToken');
     const admin = localStorage.getItem('adminData');
 
     if (!token || !admin) {
-      router.push('/manager');
+      router.push('/waiter');
       return;
     }
 
     const adminObj = JSON.parse(admin);
-    if (adminObj.role !== 'manager') {
-      router.push('/manager');
+    if (adminObj.role !== 'waiter') {
+      router.push('/waiter');
       return;
     }
 
@@ -34,50 +33,48 @@ export default function ManagerLayout({ children }) {
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminData');
-    router.push('/manager');
+    router.push('/waiter');
   };
 
   const navItems = [
-    { href: '/manager/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/manager/dashboard/menu', label: 'Menu', icon: Utensils },
-    { href: '/manager/dashboard/extras', label: 'Extras', icon: PlusCircle },
-    { href: '/manager/dashboard/orders', label: 'Orders', icon: ShoppingBag },
-    { href: '/manager/dashboard/create-order', label: 'Create Order', icon: ShoppingCart },
-    { href: '/manager/dashboard/order-history', label: 'Order History', icon: History },
+    { href: '/waiter/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/waiter/dashboard/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/waiter/dashboard/create-order', label: 'Create Order', icon: ShoppingCart },
+    { href: '/waiter/dashboard/order-history', label: 'Order History', icon: History },
   ];
 
   if (!adminData) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-400"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex">
-      {/* Sidebar Overlay for Mobile */}
+    <div className="h-dvh min-h-dvh bg-gray-900 flex flex-col lg:flex-row overflow-hidden">
       {sidebarOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${
           sidebarOpen ? 'w-64' : 'w-0 lg:w-64'
-        } fixed lg:static inset-y-0 left-0 bg-gray-800 border-r border-gray-700 transition-all duration-300 overflow-hidden z-50`}
+        } fixed lg:static inset-y-0 left-0 bg-gray-800 border-r border-gray-700 transition-all duration-300 overflow-hidden z-50 lg:shrink-0`}
       >
-        <div className="p-4 lg:p-6 h-full overflow-y-auto">
+        <div className="p-4 lg:p-6 h-full overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-center justify-between mb-6 lg:mb-8">
-            <h2 className="text-lg lg:text-xl font-bold text-white">Manager Panel</h2>
+            <h2 className="text-lg lg:text-xl font-bold text-white truncate">Waiter Panel</h2>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-white"
+              className="lg:hidden p-2.5 -mr-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-white touch-manipulation"
+              aria-label="Close menu"
             >
               <MenuIcon className="w-5 h-5" />
             </button>
@@ -92,10 +89,10 @@ export default function ManagerLayout({ children }) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors min-h-[44px] touch-manipulation ${
                     isActive
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      ? 'bg-cyan-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white active:bg-gray-600'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -109,11 +106,11 @@ export default function ManagerLayout({ children }) {
             <div className="px-4 py-2 mb-4">
               <p className="text-sm text-gray-400">Logged in as</p>
               <p className="text-white font-semibold text-sm lg:text-base">{adminData.username}</p>
-              <p className="text-gray-500 text-xs">Manager</p>
+              <p className="text-gray-500 text-xs">Waiter</p>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-900/20 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-900/20 transition-colors min-h-[44px] touch-manipulation"
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Logout</span>
@@ -122,21 +119,19 @@ export default function ManagerLayout({ children }) {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-0">
-        {/* Mobile Header */}
-        <header className="lg:hidden bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-30">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 lg:ml-0">
+        <header className="lg:hidden shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-3 sticky top-0 z-30 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="text-gray-400 hover:text-white"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2 text-gray-400 hover:text-white active:text-white touch-manipulation"
+            aria-label="Open menu"
           >
             <MenuIcon className="w-6 h-6" />
           </button>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
-          <AdminNotificationProvider role="manager">
+        <main className="flex-1 min-h-0 p-3 sm:p-4 lg:p-6 overflow-y-auto overflow-x-hidden overscroll-contain pb-[env(safe-area-inset-bottom)]">
+          <AdminNotificationProvider role="waiter">
             {children}
           </AdminNotificationProvider>
         </main>

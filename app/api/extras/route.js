@@ -1,14 +1,30 @@
 import { NextResponse } from 'next/server';
-import { readExtrasData, writeExtrasData } from '@/lib/jsonHandler';
+import { readExtrasData, writeExtrasData, readCategoriesData } from '@/lib/jsonHandler';
 import { saveImage, deleteImage, deleteImages } from '@/lib/imageUpload';
+import { hasDisabledCategory } from '@/lib/utils';
 
 /**
  * GET /api/extras - Get all extra items
+ * Items in disabled categories are returned with status 'Not Available'
  */
 export async function GET() {
   try {
     const data = readExtrasData();
-    return NextResponse.json({ success: true, extras: data.extras || [] });
+    const categoriesData = readCategoriesData();
+    const categories = categoriesData.categories || [];
+
+    const otherCategoryDisabled = (categories || []).some(
+      (c) => (c.label || '').toLowerCase() === 'other' && c.enabled === false
+    );
+
+    const extras = (data.extras || []).map((item) => {
+      const categoryDisabled =
+        otherCategoryDisabled || hasDisabledCategory(item, categories);
+      const effectiveStatus = categoryDisabled ? 'Not Available' : (item.status || 'Available');
+      return { ...item, status: effectiveStatus };
+    });
+
+    return NextResponse.json({ success: true, extras });
   } catch (error) {
     console.error('Error fetching extras:', error);
     return NextResponse.json(
@@ -38,6 +54,7 @@ export async function POST(request) {
         price: parseFloat(formData.get('price')) || 0,
         categoryId: formData.get('categoryId') || 'other',
         categoryLabel: formData.get('categoryLabel') || 'Other',
+        status: formData.get('status') || 'Available',
       };
 
       // Handle image uploads
@@ -96,6 +113,7 @@ export async function POST(request) {
       categoryId: body.categoryId || 'other',
       categoryLabel: body.categoryLabel || 'Other',
       images: uploadedImages,
+      status: body.status || 'Available',
     };
     
     data.extras.push(newItem);
@@ -152,6 +170,7 @@ export async function PUT(request) {
         price: formData.get('price') ? parseFloat(formData.get('price')) : undefined,
         categoryId: formData.get('categoryId'),
         categoryLabel: formData.get('categoryLabel'),
+        status: formData.get('status'),
       };
 
       // Get existing images to keep

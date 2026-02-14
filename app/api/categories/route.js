@@ -21,7 +21,8 @@ export async function GET() {
         : 0;
       categories.push({
         id: maxId + 1,
-        label: 'Other'
+        label: 'Other',
+        enabled: true
       });
       
       // Save the updated categories
@@ -29,7 +30,11 @@ export async function GET() {
       writeCategoriesData(data);
     }
     
-    return NextResponse.json({ success: true, categories });
+    const normalized = categories.map((c) => ({
+      ...c,
+      enabled: c.enabled !== false,
+    }));
+    return NextResponse.json({ success: true, categories: normalized });
   } catch (error) {
     console.error('Error fetching categories:', error);
     return NextResponse.json(
@@ -58,6 +63,7 @@ export async function POST(request) {
     const newCategory = {
       id: newId,
       label: body.label || 'New Category',
+      enabled: body.enabled !== false,
     };
 
     data.categories.push(newCategory);

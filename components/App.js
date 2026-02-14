@@ -309,7 +309,7 @@ const App = ({ tableNumber: propTableNumber }) => {
     name: extra.name,
     price: Number(extra.price) || 0,
     finalPrice: Number(extra.price) || 0,
-    status: 'Available',
+    status: extra.status || 'Available',
     images: extra.images || [],
     time: 0,
     categoryIds: [],
@@ -545,17 +545,7 @@ const App = ({ tableNumber: propTableNumber }) => {
       const result = await response.json();
       
       if (result.success) {
-        // Broadcast new order to owner
-        await fetch('/api/broadcast', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            type: 'new_order',
-            data: result.order,
-          }),
-        });
+        // new_order is broadcast by orders API (owner only)
 
         // Show notification
         if ('Notification' in window && Notification.permission === 'granted') {
@@ -672,7 +662,11 @@ const App = ({ tableNumber: propTableNumber }) => {
       await fetch('/api/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'call_waiter', data: { tableNumber } }),
+        body: JSON.stringify({
+          type: 'call_waiter',
+          data: { tableNumber },
+          targetRoles: ['owner', 'waiter'],
+        }),
       });
       setToastMessage('Calling for water...');
       addNotification('call_waiter', 'You called for water.');
@@ -770,15 +764,16 @@ const App = ({ tableNumber: propTableNumber }) => {
         )}
       </div>
 
-      {/* Call for water — fixed bottom */}
+      {/* Call Waiter — fixed bottom FAB */}
       {tableNumber && (
         <button
           type="button"
           onClick={handleCallWater}
-          className="fixed bottom-20 right-4 sm:right-6 z-20 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-400 text-white shadow-lg shadow-black/30 flex items-center justify-center transition"
-          aria-label="Call for water"
+          className="fixed bottom-30 right-4 sm:right-6 z-20 flex items-center gap-2 px-4 py-3 rounded-full bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-white font-medium text-sm shadow-lg shadow-cyan-900/30 hover:shadow-xl hover:shadow-cyan-900/40 transition-all duration-200 hover:scale-105 active:scale-95 border border-cyan-400/30"
+          aria-label="Call waiter"
         >
-          <Droplets className="w-7 h-7" />
+          <ConciergeBell className="w-5 h-5 shrink-0" />
+          <span>Call Waiter</span>
         </button>
       )}
 

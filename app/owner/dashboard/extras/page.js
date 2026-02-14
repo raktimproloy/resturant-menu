@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, X, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, ToggleLeft, ToggleRight } from 'lucide-react';
 
 export default function ExtrasManagement() {
   const [extras, setExtras] = useState([]);
@@ -14,6 +14,7 @@ export default function ExtrasManagement() {
     price: '',
     categoryId: '',
     categoryLabel: '',
+    status: 'Available',
   });
   const [newImages, setNewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
@@ -106,6 +107,26 @@ export default function ExtrasManagement() {
     }
   };
 
+  const handleToggleStatus = async (item) => {
+    const newStatus = (item.status || 'Available') === 'Available' ? 'Not Available' : 'Available';
+    try {
+      const response = await fetch('/api/extras', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id, status: newStatus }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        fetchExtras();
+      } else {
+        alert(data.error || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      alert('An error occurred');
+    }
+  };
+
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({
@@ -114,6 +135,7 @@ export default function ExtrasManagement() {
       price: item.price || '',
       categoryId: item.categoryId || '',
       categoryLabel: item.categoryLabel || '',
+      status: item.status || 'Available',
     });
     setExistingImages(item.images || []);
     setImagesToDelete([]);
@@ -128,6 +150,7 @@ export default function ExtrasManagement() {
       price: '',
       categoryId: '',
       categoryLabel: '',
+      status: 'Available',
     });
     setNewImages([]);
     setExistingImages([]);
@@ -179,6 +202,9 @@ export default function ExtrasManagement() {
                 <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden md:table-cell">
                   Category
                 </th>
+                <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Status
+                </th>
                 <th className="px-2 sm:px-3 lg:px-6 py-2.5 lg:py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
@@ -207,6 +233,29 @@ export default function ExtrasManagement() {
                   </td>
                   <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-gray-300 text-xs lg:text-sm hidden md:table-cell">
                     {item.categoryLabel}
+                  </td>
+                  <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => handleToggleStatus(item)}
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                        (item.status || 'Available') === 'Available'
+                          ? 'bg-green-600/30 text-green-400 hover:bg-green-600/50'
+                          : 'bg-red-600/30 text-red-400 hover:bg-red-600/50'
+                      }`}
+                      title={(item.status || 'Available') === 'Available' ? 'Click to set Unavailable' : 'Click to set Available'}
+                    >
+                      {(item.status || 'Available') === 'Available' ? (
+                        <>
+                          <ToggleRight className="w-4 h-4" />
+                          Available
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="w-4 h-4" />
+                          Unavailable
+                        </>
+                      )}
+                    </button>
                   </td>
                   <td className="px-2 sm:px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right">
                     <div className="flex justify-end gap-1 sm:gap-2">
@@ -296,6 +345,20 @@ export default function ExtrasManagement() {
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Not Available">Not Available</option>
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

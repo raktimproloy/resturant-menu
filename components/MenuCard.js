@@ -1,4 +1,4 @@
-import { Clock, Plus, Tag } from 'lucide-react';
+import { Package, Plus, Tag } from 'lucide-react';
 
 const MenuCard = ({ item, onShowDetails, onAddToCartDirectly }) => {
   const fallbackImage = `https://placehold.co/600x400/475569/f1f5f9?text=${item.name.split(' ')[0]}`;
@@ -59,12 +59,12 @@ const MenuCard = ({ item, onShowDetails, onAddToCartDirectly }) => {
           {item.name}
         </h3>
 
-        {/* Details */}
-        {item.time !== undefined && item.time > 0 && (
+        {/* Details — Stock (never hide as Not Available when stock is 0) */}
+        {item.stock !== undefined && item.stock !== null && (
           <div className="flex items-center justify-between text-xs sm:text-sm mb-3">
             <div className="flex items-center text-indigo-300 font-medium">
-              <Clock className="w-4 h-4 mr-1" />
-              <span>{item.time} min</span>
+              <Package className="w-4 h-4 mr-1" />
+              <span>Stock: {item.stock}</span>
             </div>
           </div>
         )}

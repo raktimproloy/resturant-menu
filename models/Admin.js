@@ -25,7 +25,7 @@ const AdminSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ['owner', 'manager', 'cashier'],
+    enum: ['owner', 'manager', 'cashier', 'waiter'],
     default: 'cashier',
   },
   createdAt: {
@@ -51,7 +51,11 @@ AdminSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-const Admin = mongoose.models.Admin || mongoose.model('Admin', AdminSchema);
+// Delete cached model to ensure schema updates (e.g. new enum values) are applied
+if (mongoose.models.Admin) {
+  delete mongoose.models.Admin;
+}
+const Admin = mongoose.model('Admin', AdminSchema);
 
 export default Admin;
 

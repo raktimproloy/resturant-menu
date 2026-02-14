@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, X, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, ToggleLeft, ToggleRight } from 'lucide-react';
 
 export default function CategoryManagement() {
   const [categories, setCategories] = useState([]);
@@ -11,6 +11,7 @@ export default function CategoryManagement() {
   const [formData, setFormData] = useState({
     id: '',
     label: '',
+    enabled: true,
   });
 
   useEffect(() => {
@@ -33,17 +34,17 @@ export default function CategoryManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    const payload = editingCategory
+      ? { id: editingCategory.id, label: formData.label, enabled: formData.enabled }
+      : { label: formData.label, enabled: formData.enabled };
     try {
-      const url = editingCategory ? '/api/categories' : '/api/categories';
+      const url = '/api/categories';
       const method = editingCategory ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -85,14 +86,40 @@ export default function CategoryManagement() {
     setFormData({
       id: category.id || '',
       label: category.label || '',
+      enabled: category.enabled !== false,
     });
     setShowModal(true);
+  };
+
+  const handleToggleEnabled = async (category) => {
+    const newEnabled = category.enabled === false;
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: category.id,
+          label: category.label,
+          enabled: newEnabled,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        fetchCategories();
+      } else {
+        alert(data.error || 'Failed to update category');
+      }
+    } catch (error) {
+      console.error('Error toggling category:', error);
+      alert('An error occurred');
+    }
   };
 
   const resetForm = () => {
     setFormData({
       id: '',
       label: '',
+      enabled: true,
     });
     setEditingCategory(null);
   };
@@ -132,6 +159,9 @@ export default function CategoryManagement() {
                 <th className="px-3 sm:px-4 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Label
                 </th>
+                <th className="px-3 sm:px-4 lg:px-6 py-2.5 lg:py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  Status
+                </th>
                 <th className="px-3 sm:px-4 lg:px-6 py-2.5 lg:py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
@@ -139,12 +169,38 @@ export default function CategoryManagement() {
             </thead>
             <tbody className="divide-y divide-gray-700">
               {categories.map((category) => (
-                <tr key={category.id} className="hover:bg-gray-750">
+                <tr
+                  key={category.id}
+                  className={`hover:bg-gray-750 ${category.enabled === false ? 'opacity-60' : ''}`}
+                >
                   <td className="px-3 sm:px-4 lg:px-6 py-3 lg:py-4 text-white font-medium text-sm lg:text-base max-w-[100px] sm:max-w-none truncate">
                     {category.id}
                   </td>
                   <td className="px-3 sm:px-4 lg:px-6 py-3 lg:py-4 text-gray-300 text-sm lg:text-base truncate">
                     {category.label}
+                  </td>
+                  <td className="px-3 sm:px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => handleToggleEnabled(category)}
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        category.enabled !== false
+                          ? 'bg-green-600/30 text-green-400 hover:bg-green-600/50'
+                          : 'bg-red-600/30 text-red-400 hover:bg-red-600/50'
+                      }`}
+                      title={category.enabled !== false ? 'Enabled - Click to disable' : 'Disabled - Click to enable'}
+                    >
+                      {category.enabled !== false ? (
+                        <>
+                          <ToggleRight className="w-4 h-4" />
+                          Enabled
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="w-4 h-4" />
+                          Disabled
+                        </>
+                      )}
+                    </button>
                   </td>
                   <td className="px-3 sm:px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-right">
                     <div className="flex justify-end gap-1 sm:gap-2">
@@ -193,19 +249,17 @@ export default function CategoryManagement() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Category ID *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.id}
-                    onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                    className="w-full px-3 lg:px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm lg:text-base"
-                    placeholder="e.g., appetizers, main-course"
-                  />
-                </div>
+                {editingCategory && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Category ID</label>
+                    <input
+                      type="text"
+                      value={formData.id}
+                      readOnly
+                      className="w-full px-3 lg:px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-gray-400 text-sm lg:text-base"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Category Label *
@@ -219,6 +273,36 @@ export default function CategoryManagement() {
                     placeholder="e.g., Appetizers, Main Course"
                   />
                 </div>
+
+                {editingCategory && (
+                  <div className="flex items-center gap-3">
+                    <label className="block text-sm font-medium text-gray-300">Status</label>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, enabled: !formData.enabled })}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+                        formData.enabled
+                          ? 'bg-green-600/30 text-green-400'
+                          : 'bg-red-600/30 text-red-400'
+                      }`}
+                    >
+                      {formData.enabled ? (
+                        <>
+                          <ToggleRight className="w-4 h-4" />
+                          Enabled
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="w-4 h-4" />
+                          Disabled
+                        </>
+                      )}
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      Disabled = all items in this category become unavailable
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
                   <button

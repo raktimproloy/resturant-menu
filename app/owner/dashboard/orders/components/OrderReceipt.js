@@ -28,7 +28,7 @@ export default function OrderReceipt({ order, variant = 'processing' }) {
         <div className="mb-4">
           <div className="flex justify-between font-bold text-lg">
             <span>Order #{order.id.slice(-4)}</span>
-            <span>Table {order.tableNumber}</span>
+            <span>Table {order.tableNumber ?? '-'}</span>
           </div>
           <div className="text-xs mt-1">
             Type: {order.priority || 'Standard'}

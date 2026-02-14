@@ -10,7 +10,7 @@ export default function Signup() {
     username: '',
     email: '',
     password: '',
-    role: 'cashier',
+    role: 'waiter',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -143,9 +143,10 @@ export default function Signup() {
                   required
                   className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
-                  <option value="cashier">Cashier</option>
+                  <option value="owner">Owner (Admin)</option>
                   <option value="manager">Manager</option>
-                  <option value="owner">Owner</option>
+                  <option value="waiter">Waiter</option>
+                  <option value="cashier">Cashier</option>
                 </select>
               </div>
             </div>

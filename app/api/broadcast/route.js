@@ -2,14 +2,16 @@ import { NextResponse } from 'next/server';
 import { broadcastMessage } from '@/lib/broadcast';
 
 /**
- * POST /api/broadcast - Broadcast a message to all connected clients
+ * POST /api/broadcast - Broadcast a message to connected clients
+ * Body: { type, data, targetRoles?: ['owner','waiter'] } — targetRoles limits who receives the message
  */
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { type, data } = body;
-    
-    const sentCount = broadcastMessage(type, data);
+    const { type, data, targetRoles } = body;
+
+    const options = targetRoles?.length ? { targetRoles } : {};
+    const sentCount = broadcastMessage(type, data, options);
     
     return NextResponse.json({ 
       success: true, 

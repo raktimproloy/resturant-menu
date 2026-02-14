@@ -1,14 +1,26 @@
 import { NextResponse } from 'next/server';
-import { readMenuData, writeMenuData, calculateFinalPrice } from '@/lib/jsonHandler';
+import { readMenuData, writeMenuData, readCategoriesData, calculateFinalPrice } from '@/lib/jsonHandler';
 import { saveImage, deleteImage, deleteImages } from '@/lib/imageUpload';
+import { hasDisabledCategory } from '@/lib/utils';
 
 /**
  * GET /api/menu - Get all menu items
+ * Items in disabled categories are returned with status 'Not Available'
  */
 export async function GET() {
   try {
     const data = readMenuData();
-    return NextResponse.json({ success: true, menu: data.menu || [] });
+    const categoriesData = readCategoriesData();
+    const categories = categoriesData.categories || [];
+
+    const menu = (data.menu || []).map((item) => {
+      const categoryDisabled = hasDisabledCategory(item, categories);
+      const effectiveStatus =
+        categoryDisabled || item.status === 'Not Available' ? 'Not Available' : item.status;
+      return { ...item, status: effectiveStatus };
+    });
+
+    return NextResponse.json({ success: true, menu });
   } catch (error) {
     console.error('Error fetching menu:', error);
     return NextResponse.json(
@@ -35,7 +47,7 @@ export async function POST(request) {
       body = {
         name: formData.get('name') || 'Untitled Item',
         categoryIds: formData.get('categoryIds') ? JSON.parse(formData.get('categoryIds')) : [],
-        time: parseInt(formData.get('time')) || 15,
+        stock: formData.get('stock') !== '' && formData.get('stock') !== null ? parseInt(formData.get('stock')) : 0,
         price: parseFloat(formData.get('price')) || 0,
         status: formData.get('status') || 'Available',
         tag: formData.get('tag') || null,
@@ -99,7 +111,7 @@ export async function POST(request) {
       id: newId,
       name: body.name || 'Untitled Item',
       categoryIds: body.categoryIds || [],
-      time: body.time || 15,
+      stock: body.stock !== undefined && body.stock !== null ? parseInt(body.stock) : 0,
       price: body.price || 0,
       finalPrice: finalPrice,
       status: body.status || 'Available',
@@ -163,7 +175,7 @@ export async function PUT(request) {
         id: id,
         name: formData.get('name'),
         categoryIds: formData.get('categoryIds') ? JSON.parse(formData.get('categoryIds')) : undefined,
-        time: formData.get('time') ? parseInt(formData.get('time')) : undefined,
+        stock: formData.get('stock') !== '' && formData.get('stock') !== null ? parseInt(formData.get('stock')) : undefined,
         price: formData.get('price') ? parseFloat(formData.get('price')) : undefined,
         status: formData.get('status'),
         tag: formData.get('tag'),

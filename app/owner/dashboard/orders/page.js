@@ -252,10 +252,7 @@ export default function OrdersManagement() {
 
       const data = await response.json();
       if (data.success) {
-        // Clear notification if it matches
-        if (newOrderNotification && newOrderNotification.id === orderId) {
-          setNewOrderNotification(null);
-        }
+        clearNewOrder(orderId);
 
         // Broadcast update
         await fetch('/api/broadcast', {

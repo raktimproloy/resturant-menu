@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Utensils, PlusCircle, ShoppingBag, History, LogOut, Menu as MenuIcon, LayoutDashboard } from 'lucide-react';
+import { Utensils, PlusCircle, ShoppingBag, History, LogOut, Menu as MenuIcon, LayoutDashboard, Users, ShoppingCart } from 'lucide-react';
 import { AdminNotificationProvider } from './AdminNotificationContext';
 
 export default function OwnerLayout({ children }) {
@@ -39,10 +39,12 @@ export default function OwnerLayout({ children }) {
 
   const navItems = [
     { href: '/owner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/owner/dashboard/users', label: 'Users', icon: Users },
     { href: '/owner/dashboard/categories', label: 'Categories', icon: Utensils },
     { href: '/owner/dashboard/extras', label: 'Extras', icon: PlusCircle },
     { href: '/owner/dashboard/menu', label: 'Menu', icon: Utensils },
     { href: '/owner/dashboard/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/owner/dashboard/create-order', label: 'Create Order', icon: ShoppingCart },
     { href: '/owner/dashboard/order-history', label: 'Order History', icon: History },
   ];
 
@@ -139,7 +141,7 @@ export default function OwnerLayout({ children }) {
 
         {/* Page Content - scrollable */}
         <main className="flex-1 min-h-0 p-3 sm:p-4 lg:p-6 overflow-y-auto overflow-x-hidden overscroll-contain pb-[env(safe-area-inset-bottom)]">
-          <AdminNotificationProvider>
+          <AdminNotificationProvider role="owner">
             {children}
           </AdminNotificationProvider>
         </main>
