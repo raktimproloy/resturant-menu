@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "node server-local.js",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@network-utils/arp-lookup": "^2.1.0",
     "bcryptjs": "^3.0.3",
     "formidable": "^3.5.4",
     "jsonwebtoken": "^9.0.2",

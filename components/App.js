@@ -515,9 +515,20 @@ const App = ({ tableNumber: propTableNumber }) => {
       }, 2);
       const highestPriorityLabel = Object.keys(priorityRank).find(key => priorityRank[key] === highestPriority) || 'Medium';
 
+      // Collect device info for order tracking (merged with server-side IP/MAC)
+      const deviceInfo = typeof navigator !== 'undefined' ? {
+        timezone: Intl?.DateTimeFormat?.()?.resolvedOptions?.()?.timeZone || null,
+        screenWidth: window?.screen?.width || null,
+        screenHeight: window?.screen?.height || null,
+        platform: navigator?.platform || null,
+        language: navigator?.language || null,
+        cookieEnabled: navigator?.cookieEnabled ?? null,
+      } : {};
+
       // Create order via API
       const orderData = {
         tableNumber: tableNumber,
+        deviceInfo,
         items: cart.map(item => ({
           id: item.id,
           name: item.name,

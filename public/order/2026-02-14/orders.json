@@ -27,6 +27,225 @@
       "completedAt": "2026-02-14T03:48:39.552Z",
       "queueTimeSeconds": 19,
       "processingTimeSeconds": 9
+    },
+    {
+      "id": "ORD-1771042834877",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 440,
+      "status": "cancelled",
+      "priority": "Medium",
+      "totalPrepTime": 15,
+      "createdAt": "2026-02-14T04:20:34.877Z",
+      "updatedAt": "2026-02-14T04:31:12.697Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "deviceInfo": {
+        "ip": "::ffff:127.0.0.1",
+        "mac": null,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0",
+        "browser": "Edge",
+        "os": "Windows",
+        "deviceType": "Desktop",
+        "language": "en-US",
+        "referer": "http://localhost:3000/?code=0IDMy0SeltWL0VmcjV2ctUnbl1WL05WYyVXY0NXZyVnbl1WL05WYyVXY0NXZy1iMtUGbiFGd&id=table-2&table=%3DQjMwITL5V2atQXZyNWZz1SduVWbtQnbhJXdhR3clJnM",
+        "accept": "*/*",
+        "capturedAt": "2026-02-14T04:20:34.877Z",
+        "timezone": "Asia/Dhaka",
+        "screenWidth": 1440,
+        "screenHeight": 900,
+        "platform": "Win32",
+        "cookieEnabled": true
+      }
+    },
+    {
+      "id": "ORD-1771043494377",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 440,
+      "status": "cancelled",
+      "priority": "Medium",
+      "totalPrepTime": 15,
+      "createdAt": "2026-02-14T04:31:34.377Z",
+      "updatedAt": "2026-02-14T04:36:20.171Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "deviceInfo": {
+        "ip": "192.168.11.103",
+        "mac": "9c:6b:72:b0:63:63",
+        "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36",
+        "browser": "Chrome",
+        "os": "Android",
+        "deviceType": "Mobile",
+        "language": "en-US",
+        "referer": "http://192.168.11.109:3000/?code=0IDMy0SeltWL0VmcjV2ctUnbl1WL05WYyVXY0NXZyVnbl1WL05WYyVXY0NXZy1iMtUGbiFGd&id=table-2&table=%3DQjMwITL5V2atQXZyNWZz1SduVWbtQnbhJXdhR3clJnM",
+        "accept": "*/*",
+        "capturedAt": "2026-02-14T04:31:34.377Z",
+        "timezone": "Asia/Dhaka",
+        "screenWidth": 360,
+        "screenHeight": 780,
+        "platform": "Linux armv81",
+        "cookieEnabled": true
+      }
+    },
+    {
+      "id": "ORD-1771043807312",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium"
+        },
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium",
+          "isLaterOrder": true,
+          "addedAt": "2026-02-14T04:59:54.320Z"
+        }
+      ],
+      "total": 880,
+      "status": "cancelled",
+      "priority": "Medium",
+      "totalPrepTime": 15,
+      "createdAt": "2026-02-14T04:36:47.312Z",
+      "updatedAt": "2026-02-14T05:01:14.787Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": true,
+      "deviceInfo": {
+        "ip": "192.168.11.103",
+        "mac": "9c:6b:72:b0:63:63",
+        "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36",
+        "browser": "Chrome",
+        "os": "Android",
+        "deviceType": "Mobile",
+        "language": "en-US",
+        "referer": "http://192.168.11.109:3000/?code=0IDMy0SeltWL0VmcjV2ctUnbl1WL05WYyVXY0NXZyVnbl1WL05WYyVXY0NXZy1iMtUGbiFGd&id=table-2&table=%3DQjMwITL5V2atQXZyNWZz1SduVWbtQnbhJXdhR3clJnM",
+        "accept": "*/*",
+        "capturedAt": "2026-02-14T04:59:54.320Z",
+        "timezone": "Asia/Dhaka",
+        "screenWidth": 360,
+        "screenHeight": 780,
+        "platform": "Linux armv81",
+        "cookieEnabled": true
+      },
+      "cancelledByBlock": true
+    },
+    {
+      "id": "ORD-1771045740300",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 440,
+      "status": "cancelled",
+      "priority": "Medium",
+      "totalPrepTime": 15,
+      "createdAt": "2026-02-14T05:09:00.300Z",
+      "updatedAt": "2026-02-14T05:09:07.654Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "deviceInfo": {
+        "ip": "192.168.11.103",
+        "mac": "9c:6b:72:b0:63:63",
+        "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36",
+        "browser": "Chrome",
+        "os": "Android",
+        "deviceType": "Mobile",
+        "language": "en-US",
+        "referer": "http://192.168.11.109:3000/?code=0IDMy0SeltWL0VmcjV2ctUnbl1WL05WYyVXY0NXZyVnbl1WL05WYyVXY0NXZy1iMtUGbiFGd&id=table-2&table=%3DQjMwITL5V2atQXZyNWZz1SduVWbtQnbhJXdhR3clJnM",
+        "accept": "*/*",
+        "capturedAt": "2026-02-14T05:09:00.300Z",
+        "timezone": "Asia/Dhaka",
+        "screenWidth": 360,
+        "screenHeight": 780,
+        "platform": "Linux armv81",
+        "cookieEnabled": true
+      },
+      "cancelledByBlock": true
+    },
+    {
+      "id": "ORD-1771045952539",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 440,
+      "status": "cancelled",
+      "priority": "Medium",
+      "totalPrepTime": 15,
+      "createdAt": "2026-02-14T05:12:32.539Z",
+      "updatedAt": "2026-02-14T05:12:44.730Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "deviceInfo": {
+        "ip": "192.168.11.103",
+        "mac": "9c:6b:72:b0:63:63",
+        "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36",
+        "browser": "Chrome",
+        "os": "Android",
+        "deviceType": "Mobile",
+        "language": "en-US",
+        "referer": "http://192.168.11.109:3000/?code=0IDMy0SeltWL0VmcjV2ctUnbl1WL05WYyVXY0NXZyVnbl1WL05WYyVXY0NXZy1iMtUGbiFGd&id=table-2&table=%3DQjMwITL5V2atQXZyNWZz1SduVWbtQnbhJXdhR3clJnM",
+        "accept": "*/*",
+        "capturedAt": "2026-02-14T05:12:32.538Z",
+        "timezone": "Asia/Dhaka",
+        "screenWidth": 360,
+        "screenHeight": 780,
+        "platform": "Linux armv81",
+        "cookieEnabled": true
+      },
+      "cancelledByBlock": true
     }
   ]
 }

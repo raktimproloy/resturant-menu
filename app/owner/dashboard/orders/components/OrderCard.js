@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Edit2, Clock, Printer } from 'lucide-react';
 import EditOrderForm from './EditOrderForm';
+import ClientInfoPanel from './ClientInfoPanel';
 import { priorityStyles, getStatusIcon, getStatusColor, formatTime, formatElapsedTimer, formatDuration } from './utils';
 
 export default function OrderCard({
@@ -72,6 +73,7 @@ export default function OrderCard({
               )}
             </div>
           )}
+          <ClientInfoPanel deviceInfo={order.deviceInfo} onBlock />
         </div>
         <div className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full shrink-0 ${getStatusColor(order.status)}`}>
           {getStatusIcon(order.status)}

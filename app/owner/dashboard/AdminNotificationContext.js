@@ -76,6 +76,12 @@ export function AdminNotificationProvider({ children, role = null }) {
           }
           window.dispatchEvent(new CustomEvent('owner-new-order'));
         } else if (message.type === 'order_update') {
+          if (message.data?.status === 'cancelled') {
+            setNewOrderNotification((prev) => (prev?.id === message.data?.id ? null : prev));
+            setWaiterCallNotification((prev) =>
+              prev?.tableNumber === message.data?.tableNumber ? null : prev
+            );
+          }
           window.dispatchEvent(new CustomEvent('owner-order-update'));
         } else if (message.type === 'call_waiter') {
           setWaiterCallNotification({

@@ -168,6 +168,11 @@ export default function CreateOrderPage() {
     try {
       const orderData = {
         tableNumber: tableNumber ? Number(tableNumber) : null,
+        deviceInfo: typeof navigator !== 'undefined' ? {
+          timezone: Intl?.DateTimeFormat?.()?.resolvedOptions?.()?.timeZone || null,
+          platform: navigator?.platform || null,
+          language: navigator?.language || null,
+        } : {},
         items: cart.map((c) => ({
           id: c.id,
           name: c.name,

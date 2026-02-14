@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { readOrdersData, writeOrdersData, readMenuData, writeMenuData } from '@/lib/jsonHandler';
 import { getTodayDateString } from '@/lib/utils';
 import { broadcastMessage } from '@/lib/broadcast';
+import { getClientInfo } from '@/lib/getClientInfo';
 
 /** Decrement menu item stock when order is placed. Items without stock field are skipped. */
 function decrementMenuStock(items) {
@@ -46,7 +47,10 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const date = body.date || getTodayDateString();
-    
+
+    // Capture device/client info (IP, MAC, User-Agent, etc.) for local WiFi tracking
+    const deviceInfo = await getClientInfo(request, body.deviceInfo || {});
+
     const data = readOrdersData(date);
     
     // Check if there's an existing pending order for the same table
@@ -84,10 +88,11 @@ export async function POST(request) {
           data.orders[existingOrderIndex].priority = body.priority || 'Medium';
         }
         
-        // Update timestamp
+        // Update timestamp and device info (latest device that added items)
         data.orders[existingOrderIndex].updatedAt = new Date().toISOString();
         data.orders[existingOrderIndex].hasLaterOrderItems = true;
-        
+        data.orders[existingOrderIndex].deviceInfo = deviceInfo;
+
         if (writeOrdersData(data, date)) {
           decrementMenuStock(body.items || []);
           broadcastMessage('order_update', data.orders[existingOrderIndex]);
@@ -128,6 +133,7 @@ export async function POST(request) {
       customerInfo: body.customerInfo || {},
       notes: body.notes || '',
       hasLaterOrderItems: false,
+      deviceInfo,
     };
     
     data.orders.push(newOrder);

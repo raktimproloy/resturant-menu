@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Utensils, PlusCircle, ShoppingBag, History, LogOut, Menu as MenuIcon, LayoutDashboard, Users, ShoppingCart } from 'lucide-react';
+import { Utensils, PlusCircle, ShoppingBag, History, LogOut, Menu as MenuIcon, LayoutDashboard, Users, ShoppingCart, Ban } from 'lucide-react';
 import { AdminNotificationProvider } from './AdminNotificationContext';
 
 export default function OwnerLayout({ children }) {
@@ -46,6 +46,7 @@ export default function OwnerLayout({ children }) {
     { href: '/owner/dashboard/orders', label: 'Orders', icon: ShoppingBag },
     { href: '/owner/dashboard/create-order', label: 'Create Order', icon: ShoppingCart },
     { href: '/owner/dashboard/order-history', label: 'Order History', icon: History },
+    { href: '/owner/dashboard/blocked', label: 'Blocked IPs', icon: Ban },
   ];
 
   if (!adminData) {
