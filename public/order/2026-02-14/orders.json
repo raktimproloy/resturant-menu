@@ -1,0 +1,32 @@
+{
+  "orders": [
+    {
+      "id": "ORD-1771040891212",
+      "tableNumber": 2,
+      "items": [
+        {
+          "id": 1,
+          "name": "Truffle Mushroom Pastaa",
+          "quantity": 1,
+          "price": 450,
+          "finalPrice": 440,
+          "extras": [],
+          "priority": "Medium"
+        }
+      ],
+      "total": 440,
+      "status": "completed",
+      "priority": "Medium",
+      "totalPrepTime": 15,
+      "createdAt": "2026-02-14T03:48:11.212Z",
+      "updatedAt": "2026-02-14T03:48:39.552Z",
+      "customerInfo": {},
+      "notes": "",
+      "hasLaterOrderItems": false,
+      "acceptedAt": "2026-02-14T03:48:30.330Z",
+      "completedAt": "2026-02-14T03:48:39.552Z",
+      "queueTimeSeconds": 19,
+      "processingTimeSeconds": 9
+    }
+  ]
+}

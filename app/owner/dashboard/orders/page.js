@@ -358,6 +358,11 @@ export default function OrdersManagement() {
     setShowAddItemModal(false);
   };
 
+  const handlePrintOrder = (order) => {
+    setPrintVariant('processing');
+    setPrintOrder(order);
+  };
+
   const handleDone = async (orderId) => {
     try {
       const response = await fetch('/api/orders', {
@@ -471,6 +476,7 @@ export default function OrdersManagement() {
             onCancel={handleCancelOrder}
             onStatusChange={handleStatusChange}
             onDone={handleDone}
+            onPrint={handlePrintOrder}
           />
         ))}
 

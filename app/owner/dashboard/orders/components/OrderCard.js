@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Edit2, Clock } from 'lucide-react';
+import { Bell, Edit2, Clock, Printer } from 'lucide-react';
 import EditOrderForm from './EditOrderForm';
 import { priorityStyles, getStatusIcon, getStatusColor, formatTime, formatElapsedTimer, formatDuration } from './utils';
 
@@ -19,7 +19,8 @@ export default function OrderCard({
   onAccept,
   onCancel,
   onStatusChange,
-  onDone
+  onDone,
+  onPrint,
 }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -144,6 +145,13 @@ export default function OrderCard({
               {order.status === 'pending' && (
                 <>
                   <button
+                    onClick={() => onPrint(order)}
+                    className="flex-1 min-h-[44px] sm:min-h-0 px-3 lg:px-4 py-3 sm:py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base touch-manipulation"
+                  >
+                    <Printer className="w-4 h-4 shrink-0" />
+                    <span>Print</span>
+                  </button>
+                  <button
                     onClick={() => onEdit(order)}
                     className="flex-1 min-h-[44px] sm:min-h-0 px-3 lg:px-4 py-3 sm:py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base touch-manipulation"
                   >
@@ -164,13 +172,22 @@ export default function OrderCard({
                   </button>
                 </>
               )}
-              {order.status === 'processing' && (
-                <button
-                  onClick={() => onStatusChange(order.id, 'completed')}
-                  className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-3 lg:px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm lg:text-base touch-manipulation"
-                >
-                  Completed
-                </button>
+              {(order.status === 'accepted' || order.status === 'processing') && (
+                <>
+                  <button
+                    onClick={() => onPrint(order)}
+                    className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-3 lg:px-4 py-3 sm:py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm lg:text-base touch-manipulation"
+                  >
+                    <Printer className="w-4 h-4 shrink-0" />
+                    <span>Print</span>
+                  </button>
+                  <button
+                    onClick={() => onStatusChange(order.id, 'completed')}
+                    className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-3 lg:px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm lg:text-base touch-manipulation"
+                  >
+                    Completed
+                  </button>
+                </>
               )}
               {order.status === 'completed' && (
                 <button
